@@ -4,6 +4,8 @@
 
 線上版：<https://sylvia-h.github.io/ownership-theater/>
 
+![第一頁的演出：let b = a 之後，值在 JS 世界多一條線、在 Rust 世界整顆搬走，離開範圍時當場碎掉](docs/demo.webp)
+
 推送到 `main` 會由 `.github/workflows/deploy.yml` 自動跑測試、build 並發布到 GitHub Pages；測試或首屏體積檢查不過就不會發布。
 
 ## 指令
