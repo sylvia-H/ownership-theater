@@ -1,0 +1,635 @@
+/* 首頁。只跟 Home.tsx 一起載入；顏色、字型、間距沿用 style.css 的 :root 變數。 */
+
+/* 各頁是 100dvh 不捲動，首頁要能上下捲 */
+.shell.is-home {
+  height: auto;
+}
+
+.home {
+  /* 內容欄的左右留白：最寬 1120px，置中 */
+  --edge: max(var(--gutter), calc((100vw - 1120px) / 2));
+  /* 場景裡晶體與光束的顏色（對應 stage.ts 的 C_CRYSTAL、C_BEAM） */
+  --crystal: #8ce6ff;
+  --beam: #d1f7ff;
+  --hero-h: min(56dvh, 520px);
+  --shift: 0px;
+}
+
+.home h2,
+.home h3,
+.home ul {
+  margin: 0;
+}
+
+.home ul {
+  padding: 0;
+  list-style: none;
+}
+
+/* ── 開場 ─────────────────────────────── */
+
+.home-hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--line);
+}
+
+.home-stage {
+  order: 1;
+  position: relative;
+  height: var(--hero-h);
+  overflow: hidden;
+}
+
+/* 場景的取景中心是這個框的中心；寬螢幕時框往右多伸出 --shift，兩個世界就讓出左邊給標題 */
+.home-view {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: calc(100% + var(--shift));
+}
+
+.home-view canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.home-headline {
+  order: 0;
+  padding: var(--s6) var(--gutter) var(--s5);
+}
+
+.home-headline-in {
+  max-width: 34em;
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 700ms ease-out,
+    transform 700ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.home-headline-in.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+.home-headline-in.is-instant {
+  transition: none;
+}
+
+.home-hero h1 {
+  font-size: clamp(34px, 8vw, 52px);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0.06em;
+  text-wrap: balance;
+}
+
+.home-lede {
+  margin-top: var(--s3);
+  font-size: 16px;
+  color: var(--muted);
+  text-wrap: balance;
+}
+
+.home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s3) var(--s5);
+  margin-top: var(--s5);
+}
+
+.home-cta {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 var(--s4);
+  border: 1px solid var(--text);
+  border-radius: var(--radius);
+  background: var(--text);
+  color: var(--bg);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.home-cta:hover {
+  border-color: #fff;
+  background: #fff;
+}
+
+.home-more {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 14px;
+  color: var(--muted);
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+.home-more:hover {
+  color: var(--text);
+  text-decoration-color: currentColor;
+}
+
+/* 字幕：場景下緣的一行小字 */
+.home-caps {
+  order: 2;
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s1) var(--s4);
+  padding: var(--s2) var(--gutter);
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.home-cap {
+  text-wrap: pretty;
+}
+
+.home-cap-tag {
+  display: inline-block;
+  margin-right: var(--s2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.home-cap-js .home-cap-tag {
+  color: var(--js);
+}
+
+.home-cap-rust .home-cap-tag {
+  color: var(--rust);
+}
+
+.home-replay {
+  justify-self: start;
+  height: 24px;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 300ms ease-out;
+}
+
+.home-replay.is-in {
+  opacity: 1;
+}
+
+.home-replay:disabled {
+  opacity: 0;
+}
+
+@media (min-width: 720px) {
+  .home-caps {
+    grid-template-columns: 1fr 1fr auto;
+    align-items: center;
+    text-align: center;
+  }
+}
+
+/* 寬螢幕：標題疊在場景左側，兩個世界往右讓。
+   場景的比例尺固定是「高度 ÷ 5.6」，兩個世界合起來寬 10.6 個單位（= 高度 × 1.893），
+   所以用高度就能算出要往右伸多少、字幕要對在哪裡。 */
+@media (min-width: 1100px) {
+  .home {
+    /* 標題欄佔 340px；場景右邊留 32px */
+    --hero-h: min(56dvh, 520px, calc((100vw - var(--edge) - 372px) * 0.528));
+    --shift: max(0px, calc(2 * var(--edge) + 680px + var(--hero-h) * 1.893 - 100vw));
+  }
+
+  .home-headline {
+    position: absolute;
+    top: 0;
+    left: var(--edge);
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    width: 308px;
+    height: var(--hero-h);
+    padding: 0;
+    /* 指標要能穿過去碰到場景，只有連結與按鈕接得到 */
+    pointer-events: none;
+  }
+
+  .home-headline a,
+  .home-headline button {
+    pointer-events: auto;
+  }
+
+  .home-caps {
+    display: block;
+    height: 36px;
+    padding: 0;
+    text-align: center;
+  }
+
+  .home-cap {
+    position: absolute;
+    top: 0;
+    width: calc(var(--hero-h) * 0.93);
+    line-height: 35px;
+    white-space: nowrap;
+    transform: translateX(-50%);
+  }
+
+  /* 兩個世界的中心各離取景中心 2.9 個單位（= 高度 × 0.518） */
+  .home-cap-js {
+    left: calc((100% + var(--shift)) / 2 - var(--hero-h) * 0.518);
+  }
+
+  .home-cap-rust {
+    left: calc((100% + var(--shift)) / 2 + var(--hero-h) * 0.518);
+  }
+
+  .home-replay {
+    position: absolute;
+    top: 5px;
+    right: var(--gutter);
+  }
+}
+
+/* WebGL 不可用：沒有場景，只剩標題區 */
+.home-hero.is-flat .home-headline {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: calc(var(--s6) * 2) var(--edge);
+  pointer-events: auto;
+}
+
+/* ── 三段說明 ───────────────────────────── */
+
+.home-body {
+  padding: var(--s5) var(--edge) calc(var(--s6) * 3);
+}
+
+.home-row {
+  display: grid;
+  gap: var(--s3);
+  padding: var(--s6) 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.home-row h2,
+.home-index h2 {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-wrap: balance;
+}
+
+@media (min-width: 960px) {
+  .home-row {
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: var(--s6);
+    padding: calc(var(--s6) + var(--s3)) 0;
+  }
+}
+
+.home-text {
+  max-width: 40em;
+}
+
+.home-text p {
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.home-text p + p {
+  margin-top: var(--s3);
+}
+
+/* 圖例：左 JS、右 Rust，每列一個小圖形加一句話 */
+.home-legend {
+  display: grid;
+  gap: var(--s5) var(--s6);
+}
+
+@media (min-width: 720px) {
+  .home-legend {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.home-world h3 {
+  padding-bottom: var(--s2);
+  border-bottom: 1px solid var(--line-strong);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+}
+
+.home-world-js h3 {
+  color: var(--js);
+}
+
+.home-world-rust h3 {
+  color: var(--rust);
+}
+
+.home-world li {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: var(--s3);
+  padding: var(--s2) 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+/* 小圖形：全部用 CSS 畫，對齊第一行文字 */
+.g {
+  position: relative;
+  width: 24px;
+  height: 24.5px;
+}
+
+.g::before,
+.g::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+
+.g-orb::before {
+  width: 12px;
+  height: 12px;
+  margin: -6px;
+  border-radius: 50%;
+  background: var(--js);
+  box-shadow: 0 0 8px rgb(255 209 64 / 0.55);
+}
+
+.g-link::before {
+  width: 16px;
+  height: 1px;
+  margin: 0 0 0 -11px;
+  background: var(--js);
+  opacity: 0.8;
+}
+
+.g-link::after {
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 5px;
+  border-radius: 50%;
+  background: var(--js);
+}
+
+.g-stray::before {
+  width: 12px;
+  height: 12px;
+  margin: -6px;
+  border: 1px dashed var(--js);
+  border-radius: 50%;
+  opacity: 0.7;
+}
+
+.g-held::before,
+.g-husk::before {
+  width: 20px;
+  height: 20px;
+  margin: -10px;
+  border: 1.5px solid var(--rust);
+  border-radius: 50%;
+}
+
+.g-held::after {
+  width: 8px;
+  height: 8px;
+  margin: -4px;
+  background: var(--crystal);
+  transform: rotate(45deg);
+}
+
+.g-husk::before {
+  border-style: dashed;
+  opacity: 0.65;
+}
+
+.g-shards::before {
+  width: 4px;
+  height: 4px;
+  margin: -2px;
+  background: var(--crystal);
+  box-shadow:
+    -7px -4px 0 -0.5px var(--crystal),
+    6px -6px 0 -1px var(--crystal),
+    7px 4px 0 -0.5px var(--crystal),
+    -5px 6px 0 -1px var(--crystal);
+  transform: rotate(20deg);
+}
+
+.g-beam::before {
+  width: 22px;
+  height: 2px;
+  margin: -1px -11px;
+  background: linear-gradient(90deg, var(--beam), rgb(209 247 255 / 0.15));
+}
+
+.g-field::before {
+  width: 18px;
+  height: 18px;
+  margin: -9px;
+  border: 1.5px solid var(--error);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgb(255 64 89 / 0.5);
+}
+
+/* 三句核心精神 */
+.home-rules {
+  counter-reset: rule;
+}
+
+.home-rules li {
+  counter-increment: rule;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: var(--s3);
+  padding: var(--s2) 0;
+  text-wrap: pretty;
+}
+
+.home-rules li::before {
+  content: counter(rule);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--rust);
+  text-align: center;
+}
+
+.home-text .home-point {
+  margin-top: var(--s4);
+  padding-top: var(--s4);
+  border-top: 1px solid var(--line);
+  color: var(--text);
+}
+
+/* ── 分區索引 ───────────────────────────── */
+
+.home-index {
+  padding-top: calc(var(--s6) + var(--s3));
+}
+
+.home-index-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s1) var(--s4);
+}
+
+.home-index h2 {
+  scroll-margin-top: var(--s5);
+}
+
+/* 「看全部場次」把焦點移到這個標題，只是為了讓鍵盤與報讀從這裡接下去，不需要外框 */
+.home-index h2:focus {
+  outline: none;
+}
+
+.home-index-note {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.home-tabbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2) var(--s4);
+  margin-top: var(--s4);
+  border-bottom: 1px solid var(--line);
+}
+
+.home-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: -1px;
+}
+
+.home-tab {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s2);
+  padding: var(--s2) var(--s4);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  font-size: 14px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.home-tab:first-child {
+  padding-left: 0;
+}
+
+.home-tab:hover {
+  color: var(--text);
+}
+
+.home-tab[aria-selected='true'] {
+  border-bottom-color: var(--rust);
+  color: var(--text);
+}
+
+.home-tab:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+
+.home-tab-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--faint);
+}
+
+.home-random {
+  margin-bottom: var(--s1);
+}
+
+.home-panel {
+  /* 最多的一區在桌面排成兩列；固定最小高度，切換頁籤時下方不跳動 */
+  min-height: 212px;
+  padding-top: var(--s4);
+}
+
+.home-panel-sub {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--rust);
+}
+
+.home .home-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
+  gap: var(--s3);
+  margin-top: var(--s3);
+}
+
+.home-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-content: start;
+  gap: var(--s1) var(--s3);
+  height: 100%;
+  min-height: 64px;
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  text-decoration: none;
+}
+
+a.home-card:hover {
+  border-color: var(--muted);
+}
+
+.home-card-no {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 21px;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.home-card-title {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+
+.home-card.is-pending {
+  border-style: dashed;
+  background: none;
+  opacity: 0.5;
+}
+
+.home-card-state {
+  grid-column: 2;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-headline-in,
+  .home-replay {
+    transition: none;
+  }
+}
