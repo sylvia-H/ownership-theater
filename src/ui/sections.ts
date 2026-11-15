@@ -53,3 +53,10 @@ export const sections: Section[] = [
     slugs: ['rc', 'refcell', 'rc-refcell'],
   },
 ];
+
+/** 排在最後的頁籤：LeetCode 對照。它的卡片來自 src/lc/index.ts 的 problems，不算進 17 齣的統計。 */
+export const lcSection = {
+  id: 'lc',
+  name: 'LeetCode 對照',
+  sub: '同一題，TS 與 Rust 逐行並排',
+} as const;

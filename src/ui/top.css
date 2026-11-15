@@ -12,3 +12,11 @@ a.brand {
 a.brand:hover {
   color: var(--text);
 }
+
+/* LeetCode 對照頁的頁碼前面多一個區名 */
+.pager-area {
+  margin-right: var(--s2);
+  font-family: var(--font-body);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
