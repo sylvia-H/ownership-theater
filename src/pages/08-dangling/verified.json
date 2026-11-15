@@ -1,0 +1,22 @@
+{
+  "rustc": "1.100.0",
+  "checkedAt": "2026-11-15T14:11:20.924Z",
+  "files": {
+    "snippet.rs": {
+      "sha256": "20484e0ecbd302974144a6c391ced09c75f8cd77ec3d1c1831f7978a0d11dd10",
+      "expect": "pass",
+      "success": true,
+      "message": "",
+      "stdout": "hello\n",
+      "stderr": "   Compiling playground v0.0.1 (/playground)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.56s\n     Running `target/debug/playground`\n"
+    },
+    "broken.rs": {
+      "sha256": "cc3101b244b93f2c37c113e2766dcf0cbe00a615997feeb943dd28e93c2a6f97",
+      "expect": "E0515",
+      "success": false,
+      "message": "error[E0515]: cannot return reference to local variable `s`\n --> src/main.rs:3:5\n  |\n3 |     &s\n  |     ^^ returns a reference to data owned by the current function",
+      "stdout": "",
+      "stderr": "   Compiling playground v0.0.1 (/playground)\nerror[E0515]: cannot return reference to local variable `s`\n --> src/main.rs:3:5\n  |\n3 |     &s\n  |     ^^ returns a reference to data owned by the current function\n\nFor more information about this error, try `rustc --explain E0515`.\nerror: could not compile `playground` (bin \"playground\") due to 1 previous error\n"
+    }
+  }
+}

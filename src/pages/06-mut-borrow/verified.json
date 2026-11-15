@@ -1,0 +1,22 @@
+{
+  "rustc": "1.100.0",
+  "checkedAt": "2026-11-15T14:11:12.964Z",
+  "files": {
+    "snippet.rs": {
+      "sha256": "3a164defc451feed5c0b2b365388238aec0c818fef188444c4d263c35d60f349",
+      "expect": "pass",
+      "success": true,
+      "message": "",
+      "stdout": "hello\nhello world\n",
+      "stderr": "   Compiling playground v0.0.1 (/playground)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.56s\n     Running `target/debug/playground`\n"
+    },
+    "broken.rs": {
+      "sha256": "9b64f9a576c00a8083c0e44fbb13d0df486bea877cd5369fd891cb89b4f7e3c3",
+      "expect": "E0502",
+      "success": false,
+      "message": "error[E0502]: cannot borrow `s` as mutable because it is also borrowed as immutable\n --> src/main.rs:4:13\n  |\n3 |     let r = &s;\n  |             -- immutable borrow occurs here\n4 |     let m = &mut s;\n  |             ^^^^^^ mutable borrow occurs here\n5 |     println!(\"{}\", r);\n  |                    - immutable borrow later used here",
+      "stdout": "",
+      "stderr": "   Compiling playground v0.0.1 (/playground)\nerror[E0502]: cannot borrow `s` as mutable because it is also borrowed as immutable\n --> src/main.rs:4:13\n  |\n3 |     let r = &s;\n  |             -- immutable borrow occurs here\n4 |     let m = &mut s;\n  |             ^^^^^^ mutable borrow occurs here\n5 |     println!(\"{}\", r);\n  |                    - immutable borrow later used here\n\nFor more information about this error, try `rustc --explain E0502`.\nerror: could not compile `playground` (bin \"playground\") due to 1 previous error\n"
+    }
+  }
+}
