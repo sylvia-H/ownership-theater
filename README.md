@@ -91,5 +91,5 @@
 | M7 | 借用區 5 頁 | 完成 |
 | M8 | Option／match／Result 3 頁 | 完成 |
 | M9 | 生命週期、迭代器、Rc／RefCell 收尾 5 頁 | 完成 |
-| M10 | 上線 | 未開始 |
+| M10 | 上線（GitHub Pages 自動部署；手機版面不做） | 完成 |
 | 可選 | LC 題概念 diff 區 | 未開始 |
