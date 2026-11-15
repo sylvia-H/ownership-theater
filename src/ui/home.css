@@ -627,6 +627,25 @@ a.home-card:hover {
   color: var(--muted);
 }
 
+/* LeetCode 對照的卡片：標題下面多一行說明 */
+.home-card-teaser {
+  grid-column: 2;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.home-empty {
+  margin-top: var(--s3);
+  padding: var(--s4);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  color: var(--faint);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .home-headline-in,
   .home-replay {

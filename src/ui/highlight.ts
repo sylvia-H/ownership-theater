@@ -19,7 +19,7 @@ const KEYWORDS: Record<Lang, ReadonlySet<string>> = {
   ts: new Set(
     (
       'break case catch class const default else export extends false for from function if import in interface ' +
-      'let new null of return switch throw true try type typeof undefined var while'
+      'let new null of return switch this throw true try type typeof undefined var void while'
     ).split(' '),
   ),
 };

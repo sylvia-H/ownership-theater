@@ -1,0 +1,565 @@
+/* LeetCode 對照頁。只跟 LcView.tsx 一起載入；顏色、字型、間距沿用 style.css 的 :root 變數。 */
+
+/* 各頁是 100dvh 不捲動，對照頁要能上下捲 */
+.shell.is-lc {
+  height: auto;
+}
+
+.lc {
+  /* 內容欄的左右留白：最寬 1480px，置中 */
+  --edge: max(var(--gutter), calc((100vw - 1480px) / 2));
+
+  /* 五個類別的顏色。借用是光束的淡青，所有權是 Rust 橘 */
+  --lc-borrow: #a8ecff;
+  --lc-ownership: var(--rust);
+  --lc-option: #f5c04a;
+  --lc-shared: #ec8fd0;
+  --lc-types: #8fa3c8;
+
+  padding: var(--s6) var(--edge) calc(var(--s6) * 3);
+}
+
+.lc h1,
+.lc h2,
+.lc h3,
+.lc ul {
+  margin: 0;
+}
+
+.lc ul {
+  padding: 0;
+  list-style: none;
+}
+
+.t-borrow {
+  --tag: var(--lc-borrow);
+}
+
+.t-ownership {
+  --tag: var(--lc-ownership);
+}
+
+.t-option {
+  --tag: var(--lc-option);
+}
+
+.t-shared {
+  --tag: var(--lc-shared);
+}
+
+.t-types {
+  --tag: var(--lc-types);
+}
+
+/* 只給報讀軟體的字 */
+.lc-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ── 標頭 ─────────────────────────────── */
+
+.lc-header {
+  max-width: 46em;
+}
+
+.lc-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s1) var(--s4);
+  margin-top: var(--s2);
+}
+
+.lc h1 {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-wrap: balance;
+}
+
+.lc-source,
+.lc-nav-index {
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 4px;
+}
+
+.lc-source:hover,
+.lc-nav-index:hover {
+  color: var(--text);
+  text-decoration-color: currentColor;
+}
+
+/* 這一頁的重點句：比內文大一級 */
+.lc-summary {
+  margin-top: var(--s4);
+  font-size: 18px;
+  line-height: 1.65;
+  color: var(--text);
+  text-wrap: pretty;
+}
+
+.lc-lead {
+  margin-top: var(--s3);
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.lc-h2 {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--rust);
+}
+
+/* ── 圖例 ─────────────────────────────── */
+
+.lc-diff {
+  margin-top: calc(var(--s6) + var(--s3));
+}
+
+.lc-legend {
+  margin-top: var(--s3);
+}
+
+.lc-legend-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+.lc-legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  height: 28px;
+  padding: 0 var(--s3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: none;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--text);
+  cursor: default;
+}
+
+.lc-legend-item.is-on {
+  border-color: var(--tag);
+  background: color-mix(in srgb, var(--tag) 10%, transparent);
+}
+
+/* 這題沒用到的類別 */
+.lc-legend-item:disabled {
+  border-color: var(--line);
+  color: var(--muted);
+  opacity: 0.4;
+}
+
+.lc-swatch {
+  width: 8px;
+  height: 8px;
+  background: var(--tag);
+}
+
+.lc-legend-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 固定留一行的高度，滑過圖例時下面的表不跳動 */
+.lc-legend-hint {
+  min-height: 1.7em;
+  margin-top: var(--s2);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+/* ── 對照表 ────────────────────────────── */
+
+.lc-table {
+  margin-top: var(--s2);
+}
+
+/* 每一列自己是一個 grid，欄寬只跟表的寬度有關，所以各列的欄對得齊；同一列的格子等高 */
+.lc-head,
+.lc-row,
+.lc-end {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.lc-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.lc-col {
+  padding: var(--s1) var(--s3);
+  border: solid var(--line);
+  border-width: 1px 0 1px 1px;
+  background: var(--panel);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.75;
+  letter-spacing: 0.14em;
+}
+
+.lc-col-ts {
+  border-top-left-radius: var(--radius);
+  color: var(--js);
+}
+
+.lc-col-rust {
+  border-right-width: 1px;
+  border-top-right-radius: var(--radius);
+  color: var(--rust);
+}
+
+.lc-col-note {
+  display: none;
+}
+
+.lc-row {
+  /* 有類別的列，Rust 那一格的底色混進多少類別的顏色 */
+  --mix: 0%;
+}
+
+.lc-cell {
+  display: flex;
+  padding-right: var(--s3);
+  border-left: 1px solid var(--line);
+  background: var(--panel);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre;
+}
+
+.lc-rust {
+  border-right: 1px solid var(--line);
+}
+
+/* 過長的行折行並懸掛縮排，做法同 style.css 的 .line code */
+.lc-cell code {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  padding-left: var(--hang, 2ch);
+  text-indent: calc(-1 * var(--hang, 2ch));
+  font: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* 一對一對應的列：兩邊都變灰，上色跟著變淡 */
+.lc-cell > * {
+  opacity: 0.45;
+}
+
+.lc-row:not(.has-tag):hover .lc-cell > * {
+  opacity: 0.8;
+}
+
+/* 這一側沒有對應的行：斜紋 */
+.lc-cell.is-empty {
+  background:
+    repeating-linear-gradient(135deg, transparent 0 5px, rgb(255 255 255 / 0.035) 5px 6px), var(--panel);
+}
+
+/* Rust 多出東西的列：Rust 那一格亮起來，左緣一條類別顏色的色條 */
+.lc-row.has-tag {
+  --mix: 8%;
+}
+
+.lc-row.has-tag .lc-ts > * {
+  opacity: 0.72;
+}
+
+.lc-row.has-tag .lc-rust > * {
+  opacity: 1;
+}
+
+.lc-row.has-tag .lc-rust:not(.is-empty) {
+  border-left-color: var(--tag);
+  background: color-mix(in srgb, var(--tag) var(--mix), var(--panel));
+  box-shadow: inset 2px 0 0 var(--tag);
+}
+
+/* 註記：窄的時候排在 Rust 那一格的正下方，延續同一條色條 */
+.lc-row.has-tag .lc-ts {
+  grid-row: 1 / span 2;
+}
+
+.lc-note {
+  grid-column: 2;
+  margin: 0;
+  padding: 0 var(--s3) var(--s2) calc(2.6em + 2px);
+  border-left: 1px solid var(--tag);
+  border-right: 1px solid var(--line);
+  background: color-mix(in srgb, var(--tag) var(--mix), var(--panel));
+  box-shadow: inset 2px 0 0 var(--tag);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.lc-note-tag {
+  margin-right: var(--s2);
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  color: var(--tag);
+  white-space: nowrap;
+}
+
+.lc-note-tag::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  background: var(--tag);
+  vertical-align: 1px;
+}
+
+/* 滑到（或聚焦）有類別的列、或圖例正指著這一類：這一列與它的註記一起加強 */
+.lc-row.has-tag:hover,
+.lc-row.has-tag:focus-visible,
+.lc-row.is-lit {
+  --mix: 17%;
+}
+
+.lc-row.has-tag:hover .lc-note,
+.lc-row.has-tag:focus-visible .lc-note,
+.lc-row.is-lit .lc-note {
+  color: var(--text);
+}
+
+.lc-row.has-tag:hover .lc-ts > *,
+.lc-row.has-tag:focus-visible .lc-ts > *,
+.lc-row.is-lit .lc-ts > * {
+  opacity: 1;
+}
+
+/* 圖例指著別的類別：暫時變淡 */
+.lc-row.is-dim {
+  --mix: 0%;
+}
+
+.lc-row.is-dim .lc-cell > *,
+.lc-row.is-dim .lc-note {
+  opacity: 0.4;
+}
+
+.lc-row:focus-visible {
+  position: relative;
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+
+/* 表的下緣 */
+.lc-end > div {
+  height: var(--s2);
+  border: solid var(--line);
+  border-width: 0 0 1px 1px;
+  background: var(--panel);
+}
+
+.lc-end > div:first-child {
+  border-bottom-left-radius: var(--radius);
+}
+
+.lc-end > div:last-child {
+  border-right-width: 1px;
+  border-bottom-right-radius: var(--radius);
+}
+
+.lc-head + .lc-row .lc-cell {
+  padding-top: var(--s2);
+}
+
+/* 拖曳選取只選起點那一欄（LcView 在按下時寫 data-sel） */
+.lc-table[data-sel='ts'] :is(.lc-rust, .lc-note),
+.lc-table[data-sel='rust'] :is(.lc-ts, .lc-note),
+.lc-table[data-sel='note'] .lc-cell {
+  user-select: none;
+}
+
+/* 桌面夠寬：註記獨立成右邊一欄，與它的列在同一水平線上，不用 hover 就能一路讀下來 */
+@media (min-width: 1180px) {
+  .lc-head,
+  .lc-row,
+  .lc-end {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) clamp(276px, 24vw, 340px);
+  }
+
+  .lc-col-note {
+    display: block;
+    padding-left: var(--s4);
+    border-color: transparent transparent var(--line);
+    background: var(--bg);
+    color: var(--muted);
+  }
+
+  .lc-row.has-tag .lc-ts {
+    grid-row: auto;
+  }
+
+  .lc-note {
+    grid-column: 3;
+    /* 第一行的基線對齊程式碼那一行；只有一行的註記不把列撐高 */
+    padding: 1.5px 0 1px var(--s4);
+    font-size: 12px;
+    border: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .lc-head + .lc-row .lc-note {
+    padding-top: calc(var(--s2) + 1.5px);
+  }
+}
+
+.lc-verified {
+  margin-top: var(--s3);
+  font-size: 12px;
+  color: var(--faint);
+}
+
+/* ── 回到劇場 ───────────────────────────── */
+
+.lc-related {
+  margin-top: calc(var(--s6) * 2);
+}
+
+.lc .lc-related-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: var(--s3);
+  margin-top: var(--s3);
+}
+
+.lc-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--s3);
+  height: 100%;
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  text-decoration: none;
+}
+
+.lc-card:hover,
+a.lc-nav-link:hover {
+  border-color: var(--muted);
+}
+
+.lc-card-no {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 21px;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.lc-card-title {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+/* ── 頁尾導覽 ───────────────────────────── */
+
+.lc-nav {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s3);
+  margin-top: calc(var(--s6) * 2);
+  padding-top: var(--s5);
+  border-top: 1px solid var(--line);
+}
+
+.lc-nav-link {
+  display: grid;
+  gap: 2px;
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  text-decoration: none;
+}
+
+.lc-nav-link.is-disabled {
+  border-color: var(--line);
+  opacity: 0.45;
+}
+
+.lc-nav-dir {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+.lc-nav-title {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.lc-nav-index {
+  justify-self: center;
+}
+
+@media (min-width: 720px) {
+  .lc-nav {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: var(--s5);
+  }
+
+  .lc-nav-link {
+    max-width: 340px;
+  }
+
+  .lc-nav-link.is-next {
+    justify-self: end;
+    width: 100%;
+    text-align: right;
+  }
+}
+
+@media (max-width: 719px) {
+  .lc-cell,
+  .lc-note {
+    font-size: 11px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lc-cell,
+  .lc-cell > *,
+  .lc-note,
+  .lc-legend-item,
+  .lc-card,
+  .lc-nav-link {
+    transition:
+      opacity 120ms ease-out,
+      background-color 120ms ease-out,
+      border-color 120ms ease-out,
+      color 120ms ease-out;
+  }
+}

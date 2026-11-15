@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { buildTimeline } from '../core/timeline.ts';
+import { problems } from '../lc/index.ts';
 import { pages } from '../pages/index.ts';
 import { Stage } from '../scene/stage.ts';
 import { createClock, prefersReducedMotion } from './clock.ts';
 import { INTRO_DELAY_MS, INTRO_MS, INTRO_TITLE_AT, introTrace } from './intro.ts';
-import { sections } from './sections.ts';
+import { lcSection, sections } from './sections.ts';
 import { createStore } from './store.ts';
 import './home.css';
 
@@ -18,7 +19,7 @@ const INDEX_ID = 'home-index';
 
 const captionIndex = (t: number) => (t <= 1 ? 0 : 1);
 
-export function Home() {
+export function Home({ tab = '' }: { tab?: string }) {
   const firstSlug = pages[0]?.slug ?? 'move';
 
   return (
@@ -26,7 +27,7 @@ export function Home() {
       <Intro firstSlug={firstSlug} />
       <div class="home-body">
         <Explain />
-        <Index />
+        <Index tab={tab} />
       </div>
     </main>
   );
@@ -294,13 +295,29 @@ const totalCount = sections.reduce((n, s) => n + s.slugs.length, 0);
 
 const two = (n: number) => String(n).padStart(2, '0');
 
-function Index() {
-  const [sel, setSel] = useState(0);
+/** 頁籤：17 齣的各分區，最後是 LeetCode 對照 */
+const tabs = [
+  ...sections.map((s) => ({ id: s.id, name: s.name, count: s.slugs.length })),
+  { id: lcSection.id, name: lcSection.name, count: problems.length },
+];
+
+/** tab 是網址帶進來的頁籤 id（`#/?tab=lc`，從對照頁回來時用）：先選那個頁籤，並捲到索引 */
+function Index({ tab }: { tab: string }) {
+  const [sel, setSel] = useState(() => Math.max(0, tabs.findIndex((t) => t.id === tab)));
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const section = sections[sel] ?? sections[0];
+  const headRef = useRef<HTMLHeadingElement>(null);
+  const section = sections[sel];
+  const current = tabs[sel] ?? tabs[0];
+
+  useEffect(() => {
+    const i = tabs.findIndex((t) => t.id === tab);
+    if (i < 0) return;
+    setSel(i);
+    headRef.current?.scrollIntoView({ block: 'start' });
+  }, [tab]);
 
   const select = (i: number) => {
-    const n = sections.length;
+    const n = tabs.length;
     const next = ((i % n) + n) % n;
     setSel(next);
     tabRefs.current[next]?.focus();
@@ -311,38 +328,40 @@ function Index() {
     if (e.key === 'ArrowRight' || e.key === 'ArrowDown') select(sel + 1);
     else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') select(sel - 1);
     else if (e.key === 'Home') select(0);
-    else if (e.key === 'End') select(sections.length - 1);
+    else if (e.key === 'End') select(tabs.length - 1);
     else return;
     e.preventDefault();
   };
 
+  // 只從 17 齣裡挑，不含 LeetCode 對照
   const random = () => {
     const pick = pages[Math.floor(Math.random() * pages.length)];
     if (pick) location.hash = `#/${pick.slug}`;
   };
 
-  if (!section) return null;
+  if (!current) return null;
   const base = firstNo[sel] ?? 1;
 
   return (
     <section class="home-index" aria-labelledby={INDEX_ID}>
       <div class="home-index-head">
-        <h2 id={INDEX_ID} tabIndex={-1}>
+        <h2 id={INDEX_ID} tabIndex={-1} ref={headRef}>
           全部場次
         </h2>
         <p class="home-index-note">
           共 {totalCount} 齣，照 Rust Book 的順序排；已開放 {pages.length} 齣。
+          {problems.length > 0 && `另有 LeetCode 對照 ${problems.length} 題。`}
         </p>
       </div>
 
       <div class="home-tabbar">
         <div class="home-tabs" role="tablist" aria-label="分區" onKeyDown={onKey}>
-          {sections.map((s, i) => (
+          {tabs.map((t, i) => (
             <button
-              key={s.id}
+              key={t.id}
               type="button"
               role="tab"
-              id={`home-tab-${s.id}`}
+              id={`home-tab-${t.id}`}
               class="home-tab"
               aria-selected={i === sel}
               aria-controls="home-panel"
@@ -352,8 +371,8 @@ function Index() {
               }}
               onClick={() => setSel(i)}
             >
-              {s.name}
-              <span class="home-tab-count">{s.slugs.length}</span>
+              {t.name}
+              {t.count > 0 && <span class="home-tab-count">{t.count}</span>}
             </button>
           ))}
         </div>
@@ -362,30 +381,53 @@ function Index() {
         </button>
       </div>
 
-      <div class="home-panel" role="tabpanel" id="home-panel" aria-labelledby={`home-tab-${section.id}`}>
-        <p class="home-panel-sub">{section.sub}</p>
-        <ul class="home-cards">
-          {section.slugs.map((slug, i) => {
-            const title = titleOf.get(slug);
-            const no = two(base + i);
-            return (
-              <li key={slug}>
-                {title !== undefined ? (
-                  <a class="home-card" href={`#/${slug}`}>
-                    <span class="home-card-no">{no}</span>
-                    <span class="home-card-title">{title}</span>
-                  </a>
-                ) : (
-                  <div class="home-card is-pending">
-                    <span class="home-card-no">{no}</span>
-                    <span class="home-card-title">{slug}</span>
-                    <span class="home-card-state">製作中</span>
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+      <div class="home-panel" role="tabpanel" id="home-panel" aria-labelledby={`home-tab-${current.id}`}>
+        {section ? (
+          <>
+            <p class="home-panel-sub">{section.sub}</p>
+            <ul class="home-cards">
+              {section.slugs.map((slug, i) => {
+                const title = titleOf.get(slug);
+                const no = two(base + i);
+                return (
+                  <li key={slug}>
+                    {title !== undefined ? (
+                      <a class="home-card" href={`#/${slug}`}>
+                        <span class="home-card-no">{no}</span>
+                        <span class="home-card-title">{title}</span>
+                      </a>
+                    ) : (
+                      <div class="home-card is-pending">
+                        <span class="home-card-no">{no}</span>
+                        <span class="home-card-title">{slug}</span>
+                        <span class="home-card-state">製作中</span>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        ) : (
+          <>
+            <p class="home-panel-sub">{lcSection.sub}</p>
+            {problems.length > 0 ? (
+              <ul class="home-cards">
+                {problems.map((p) => (
+                  <li key={p.slug}>
+                    <a class="home-card" href={`#/lc/${p.slug}`}>
+                      <span class="home-card-no">#{p.number}</span>
+                      <span class="home-card-title">{p.title}</span>
+                      <span class="home-card-teaser">{p.teaser}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p class="home-empty">製作中</p>
+            )}
+          </>
+        )}
       </div>
     </section>
   );
