@@ -1,9 +1,12 @@
 // 用真的 rustc（Rust Playground）驗證每頁的 Rust 片段，結果寫進該頁的 verified.json。
+// 「頁」有兩種：src/pages 底下的 17 頁，以及 src/lc 底下的 LeetCode 對照題（送去編譯的是完整的 solution.rs，含測試外殼）。
 //
-//   node scripts/verify-rust.mjs          只驗內容或期望有變的頁
+//   node scripts/verify-rust.mjs          只驗內容或期望有變的頁（src/pages 與 src/lc 都掃）
 //   node scripts/verify-rust.mjs --force  全部重驗
 //   node scripts/verify-rust.mjs 02-copy-vs-move 05-shared-borrow
 //                                         只處理指定的頁（src/pages 底下的資料夾名稱，可多個；可與 --force 並用）
+//   node scripts/verify-rust.mjs lc/01-two-sum
+//                                         src/lc 底下的題目要加 lc/ 前綴；可與 src/pages 的頁混著給
 //
 // 指定頁時只讀寫那幾頁的檔案，不碰其他頁，所以可以多個行程同時各跑各的頁。
 //
@@ -17,7 +20,12 @@ import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from '
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const PAGES_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'pages');
+const SRC_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'src');
+/** 掃描的根目錄。prefix 是命令列與訊息裡用的前綴：src/pages 的頁不帶前綴，src/lc 的題目帶 lc/。 */
+const ROOTS = [
+  { prefix: '', label: 'src/pages', dir: join(SRC_DIR, 'pages') },
+  { prefix: 'lc/', label: 'src/lc', dir: join(SRC_DIR, 'lc') },
+];
 const PLAYGROUND = 'https://play.rust-lang.org';
 const USER_AGENT = 'ownership-theater-verify';
 /** 請求之間的間隔（毫秒）；逐一送，不並行 */
@@ -134,8 +142,8 @@ function upToDate(prev, items) {
   return items.every((it) => files[it.name]?.sha256 === it.sha256 && files[it.name]?.expect === it.expect);
 }
 
-async function verifyPage(page) {
-  const dir = join(PAGES_DIR, page);
+/** page 是 { name, dir }：name 用在訊息裡（例如 02-copy-vs-move、lc/01-two-sum），dir 是資料夾的路徑 */
+async function verifyPage({ name: page, dir }) {
   const expects = JSON.parse(readFileSync(join(dir, 'expect.json'), 'utf8'));
   const items = Object.entries(expects).map(([name, expect]) => {
     const code = readLf(join(dir, name));
@@ -185,32 +193,50 @@ async function verifyPage(page) {
   return true;
 }
 
+/** 根目錄底下帶 expect.json 的資料夾，依名稱排序；根目錄不存在就是空的 */
+function listPages(root) {
+  if (!existsSync(root.dir)) return [];
+  return readdirSync(root.dir, { withFileTypes: true })
+    .filter((d) => d.isDirectory() && existsSync(join(root.dir, d.name, 'expect.json')))
+    .map((d) => d.name)
+    .sort()
+    .map((name) => ({ name: root.prefix + name, dir: join(root.dir, name) }));
+}
+
+/** 把位置參數對到根目錄與資料夾名稱：lc/<名稱> 是 src/lc，其餘是 src/pages */
+function resolveArg(arg) {
+  const lc = /^lc\/([^\\/]+)$/.exec(arg);
+  return lc ? { root: ROOTS[1], folder: lc[1] } : { root: ROOTS[0], folder: arg };
+}
+
 /** 要處理的頁；指定了就只看那幾頁（不列舉、不讀其他頁），參數有問題回傳 null */
 function selectPages() {
   if (unknownFlags.length) {
     console.error(`不認得的選項：${unknownFlags.join(' ')}（只支援 --force）`);
     return null;
   }
-  if (!requested.length) {
-    return readdirSync(PAGES_DIR, { withFileTypes: true })
-      .filter((d) => d.isDirectory() && existsSync(join(PAGES_DIR, d.name, 'expect.json')))
-      .map((d) => d.name)
-      .sort();
-  }
+  if (!requested.length) return ROOTS.flatMap(listPages);
   let bad = false;
+  const picked = [];
   for (const name of requested) {
-    if (name === '.' || name === '..' || /[\\/]/.test(name)) {
-      console.error(`${name}：要給 src/pages 底下的資料夾名稱，不是路徑`);
+    const { root, folder } = resolveArg(name);
+    const dir = join(root.dir, folder);
+    if (folder === '.' || folder === '..' || /[\\/]/.test(folder)) {
+      console.error(`${name}：要給 src/pages 底下的資料夾名稱，或 lc/<src/lc 底下的資料夾名稱>，不是路徑`);
       bad = true;
-    } else if (!existsSync(join(PAGES_DIR, name)) || !statSync(join(PAGES_DIR, name)).isDirectory()) {
-      console.error(`${name}：src/pages 底下沒有這個資料夾`);
+    } else if (!existsSync(dir) || !statSync(dir).isDirectory()) {
+      console.error(`${name}：${root.label} 底下沒有這個資料夾`);
       bad = true;
-    } else if (!existsSync(join(PAGES_DIR, name, 'expect.json'))) {
+    } else if (!existsSync(join(dir, 'expect.json'))) {
       console.error(`${name}：沒有 expect.json`);
       bad = true;
+    } else {
+      picked.push({ name, dir });
     }
   }
-  return bad ? null : [...requested].sort();
+  // src/pages 的頁在前、src/lc 的題目在後，各自依名稱排序
+  const rank = (p) => (p.name.startsWith('lc/') ? 1 : 0);
+  return bad ? null : picked.sort((a, b) => rank(a) - rank(b) || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 }
 
 const selected = selectPages();
@@ -221,8 +247,8 @@ for (const page of pages) {
     if (!(await verifyPage(page))) failed = true;
   } catch (err) {
     failed = true;
-    console.error(`失敗  ${page}：${err instanceof Error ? err.message : String(err)}`);
+    console.error(`失敗  ${page.name}：${err instanceof Error ? err.message : String(err)}`);
   }
 }
-if (selected && !pages.length) console.log('src/pages 底下沒有任何 expect.json');
+if (selected && !pages.length) console.log('src/pages 與 src/lc 底下沒有任何 expect.json');
 process.exitCode = failed ? 1 : 0;
