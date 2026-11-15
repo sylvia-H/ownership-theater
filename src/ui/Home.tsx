@@ -1,15 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { buildTimeline } from '../core/timeline.ts';
 import { problems } from '../lc/index.ts';
+import { TEASERS_EN } from '../lc/teasers.en.ts';
 import { pages } from '../pages/index.ts';
+import { TITLES_EN } from '../pages/titles.en.ts';
 import { Stage } from '../scene/stage.ts';
 import { createClock, prefersReducedMotion } from './clock.ts';
-import { INTRO_DELAY_MS, INTRO_MS, INTRO_TITLE_AT, introTrace } from './intro.ts';
+import { Rich } from './Rich.tsx';
+import { HOME_EN, type HomeText } from './home.en.ts';
+import { HOME_ZH } from './home.zh.ts';
+import { buildIntroTrace, INTRO_DELAY_MS, INTRO_MS, INTRO_STEPS, INTRO_TITLE_AT } from './intro.ts';
+import type { Lang } from './lang.ts';
 import { lcSection, sections } from './sections.ts';
 import { createStore } from './store.ts';
+import { STRINGS } from './strings.ts';
+import { useLang } from './useLang.ts';
 import './home.css';
 
-const INTRO_END = introTrace.steps.length;
+const INTRO_END = INTRO_STEPS;
 
 // 這次文件載入已經播過開場。模組只在文件載入時初始化一次，所以重新整理、開新分頁都會重置；
 // 站內切頁再回首頁時模組還在，就不重播。
@@ -21,13 +29,15 @@ const captionIndex = (t: number) => (t <= 1 ? 0 : 1);
 
 export function Home({ tab = '' }: { tab?: string }) {
   const firstSlug = pages[0]?.slug ?? 'move';
+  const lang = useLang();
+  const T = lang === 'en' ? HOME_EN : HOME_ZH;
 
   return (
     <main class="home">
-      <Intro firstSlug={firstSlug} />
+      <Intro firstSlug={firstSlug} T={T} lang={lang} />
       <div class="home-body">
-        <Explain />
-        <Index tab={tab} />
+        <Explain T={T} />
+        <Index tab={tab} T={T} lang={lang} />
       </div>
     </main>
   );
@@ -37,8 +47,10 @@ export function Home({ tab = '' }: { tab?: string }) {
 
 type Phase = 'waiting' | 'playing' | 'done';
 
-function Intro({ firstSlug }: { firstSlug: string }) {
-  const tl = useMemo(() => buildTimeline(introTrace), []);
+function Intro({ firstSlug, T, lang }: { firstSlug: string; T: HomeText; lang: Lang }) {
+  // 開場的軌跡依語言產生（舞台上的標籤與字幕）。換語言會重建時間軸與場景，但 store 不重建，t 留在原地。
+  const introTrace = useMemo(() => buildIntroTrace(T.intro), [T]);
+  const tl = useMemo(() => buildTimeline(introTrace), [introTrace]);
   const autoplay = useMemo(() => !prefersReducedMotion() && !introPlayed, []);
   const store = useMemo(() => createStore(autoplay ? 0 : INTRO_END), [autoplay]);
   const clock = useMemo(() => createClock(store), [store]);
@@ -95,6 +107,8 @@ function Intro({ firstSlug }: { firstSlug: string }) {
       setPhase('done');
       return;
     }
+    const S = STRINGS[lang];
+    stage.setTexts({ jsWorld: S.jsWorld, rustWorld: S.rustWorld, count: S.count });
     stage.setTimeline(tl, null);
     stage.setT(store.get());
     const off = store.subscribe((t) => stage.setT(t));
@@ -102,7 +116,7 @@ function Intro({ firstSlug }: { firstSlug: string }) {
       off();
       stage.dispose();
     };
-  }, [tl, store, clock]);
+  }, [tl, store, clock, lang]);
 
   // t → 字幕與標題
   useEffect(
@@ -158,11 +172,11 @@ function Intro({ firstSlug }: { firstSlug: string }) {
 
       <div class="home-headline">
         <div class={'home-headline-in' + (titleIn ? ' is-in' : '') + (instant ? ' is-instant' : '')}>
-          <h1 id="home-title">所有權劇場</h1>
-          <p class="home-lede">同一行程式，值在 JS 與 Rust 的命運不一樣。</p>
+          <h1 id="home-title">{T.hero.title}</h1>
+          <p class="home-lede">{T.hero.lede}</p>
           <p class="home-actions">
             <a class="home-cta" href={`#/${firstSlug}`}>
-              從第一齣開始
+              {T.hero.cta}
             </a>
             <button
               type="button"
@@ -173,7 +187,7 @@ function Intro({ firstSlug }: { firstSlug: string }) {
                 target?.focus({ preventScroll: true });
               }}
             >
-              看全部場次
+              {T.hero.more}
             </button>
           </p>
         </div>
@@ -183,11 +197,11 @@ function Intro({ firstSlug }: { firstSlug: string }) {
         <div class="home-caps">
           <p class="home-cap home-cap-js">
             <span class="home-cap-tag">JS</span>
-            {step.caption.js}
+            <Rich text={step.caption.js} />
           </p>
           <p class="home-cap home-cap-rust">
             <span class="home-cap-tag">Rust</span>
-            {step.caption.rust}
+            <Rich text={step.caption.rust} />
           </p>
           <button
             type="button"
@@ -195,7 +209,7 @@ function Intro({ firstSlug }: { firstSlug: string }) {
             onClick={replay}
             disabled={!canReplay}
           >
-            重播
+            {T.hero.replay}
           </button>
         </div>
       )}
@@ -205,63 +219,60 @@ function Intro({ firstSlug }: { firstSlug: string }) {
 
 // ── 三段說明 ───────────────────────────────
 
-function Explain() {
+function Explain({ T }: { T: HomeText }) {
   return (
     <div class="home-explain">
       <section class="home-row" aria-labelledby="home-why">
-        <h2 id="home-why">為什麼叫「劇場」</h2>
+        <h2 id="home-why">{T.why.heading}</h2>
         <div class="home-text">
-          <p>每一頁是一齣短劇，演員是「值」。舞台分成左右兩半，同一段程式在 JS 與 Rust 各演一次。</p>
-          <p>
-            拖時間軸可以前進、後退，看值在每一步的下場。每頁還有一個「弄壞它」的動作，看 Rust
-            的編譯器怎麼把它擋下來。
-          </p>
-          <p>「所有權」是這齣戲的主題：在 Rust，每個值同一時間只有一個擁有者。</p>
+          {T.why.paragraphs.map((text) => (
+            <p key={text}>{text}</p>
+          ))}
         </div>
       </section>
 
       <section class="home-row" aria-labelledby="home-read">
-        <h2 id="home-read">兩個世界怎麼讀</h2>
+        <h2 id="home-read">{T.read.heading}</h2>
         <div class="home-legend">
           <div class="home-world home-world-js">
-            <h3>JS 世界</h3>
+            <h3>{T.read.js.heading}</h3>
             <ul>
               <li>
                 <i class="g g-orb" aria-hidden="true" />
-                值是漂在空中的光球。
+                {T.read.js.items.orb}
               </li>
               <li>
                 <i class="g g-link" aria-hidden="true" />
-                變數是連到它的線，很多條線可以連同一顆。
+                {T.read.js.items.link}
               </li>
               <li>
                 <i class="g g-stray" aria-hidden="true" />
-                沒有線連著的球繼續漂，等 GC 經過才收走。
+                {T.read.js.items.stray}
               </li>
             </ul>
           </div>
           <div class="home-world home-world-rust">
-            <h3>Rust 世界</h3>
+            <h3>{T.read.rust.heading}</h3>
             <ul>
               <li>
                 <i class="g g-held" aria-hidden="true" />
-                值是被夾具握著的晶體，一個值只被一隻夾具握著。
+                {T.read.rust.items.held}
               </li>
               <li>
                 <i class="g g-husk" aria-hidden="true" />
-                指定是整顆搬走，原本的夾具變成空殼。
+                {T.read.rust.items.husk}
               </li>
               <li>
                 <i class="g g-shards" aria-hidden="true" />
-                離開範圍的那一刻，值當場碎掉。
+                {T.read.rust.items.shards}
               </li>
               <li>
                 <i class="g g-beam" aria-hidden="true" />
-                借用是一道光束：可以有很多道只讀的，或唯一一道可改的。
+                {T.read.rust.items.beam}
               </li>
               <li>
                 <i class="g g-field" aria-hidden="true" />
-                違規會被力場彈開，上面是 rustc 的錯誤訊息原文。
+                {T.read.rust.items.field}
               </li>
             </ul>
           </div>
@@ -269,16 +280,14 @@ function Explain() {
       </section>
 
       <section class="home-row" aria-labelledby="home-core">
-        <h2 id="home-core">Rust 的核心精神</h2>
+        <h2 id="home-core">{T.core.heading}</h2>
         <div class="home-text">
           <ol class="home-rules">
-            <li>每個值只有一個擁有者。</li>
-            <li>可以借，但規則在編譯期就檢查：同一時間，要嘛很多人讀，要嘛只有一個人改。</li>
-            <li>擁有者離開範圍，值立刻釋放。所以不需要 GC，也不會有指向已釋放記憶體的參考。</li>
+            {T.core.rules.map((text) => (
+              <li key={text}>{text}</li>
+            ))}
           </ol>
-          <p class="home-point">
-            兩邊的差別不是「有沒有」，是「預設」：JS 預設共享、誰都能改；Rust 預設獨占，要共享、要可改都得明講。
-          </p>
+          <p class="home-point">{T.core.point}</p>
         </div>
       </section>
     </div>
@@ -287,7 +296,11 @@ function Explain() {
 
 // ── 分區索引 ───────────────────────────────
 
-const titleOf = new Map(pages.map((p) => [p.slug, p.title]));
+/** 首頁不先載入各頁，標題取自註冊表（中文）與 titles.en.ts（英文） */
+const titleOf = (slug: string, lang: Lang): string | undefined => {
+  const zh = pages.find((p) => p.slug === slug)?.title;
+  return zh === undefined ? undefined : lang === 'en' ? (TITLES_EN[slug] ?? zh) : zh;
+};
 
 /** 每一區的第一齣是全站第幾齣（1 起算） */
 const firstNo = sections.map((_, i) => sections.slice(0, i).reduce((n, s) => n + s.slugs.length, 0) + 1);
@@ -297,12 +310,12 @@ const two = (n: number) => String(n).padStart(2, '0');
 
 /** 頁籤：17 齣的各分區，最後是 LeetCode 對照 */
 const tabs = [
-  ...sections.map((s) => ({ id: s.id, name: s.name, count: s.slugs.length })),
-  { id: lcSection.id, name: lcSection.name, count: problems.length },
+  ...sections.map((s) => ({ id: s.id, count: s.slugs.length })),
+  { id: lcSection.id, count: problems.length },
 ];
 
 /** tab 是網址帶進來的頁籤 id（`#/?tab=lc`，從對照頁回來時用）：先選那個頁籤，並捲到索引 */
-function Index({ tab }: { tab: string }) {
+function Index({ tab, T, lang }: { tab: string; T: HomeText; lang: Lang }) {
   const [sel, setSel] = useState(() => Math.max(0, tabs.findIndex((t) => t.id === tab)));
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const headRef = useRef<HTMLHeadingElement>(null);
@@ -346,16 +359,16 @@ function Index({ tab }: { tab: string }) {
     <section class="home-index" aria-labelledby={INDEX_ID}>
       <div class="home-index-head">
         <h2 id={INDEX_ID} tabIndex={-1} ref={headRef}>
-          全部場次
+          {T.index.heading}
         </h2>
         <p class="home-index-note">
-          共 {totalCount} 齣，照 Rust Book 的順序排；已開放 {pages.length} 齣。
-          {problems.length > 0 && `另有 LeetCode 對照 ${problems.length} 題。`}
+          {T.index.note(totalCount, pages.length)}
+          {problems.length > 0 && T.index.noteJoin + T.index.noteLc(problems.length)}
         </p>
       </div>
 
       <div class="home-tabbar">
-        <div class="home-tabs" role="tablist" aria-label="分區" onKeyDown={onKey}>
+        <div class="home-tabs" role="tablist" aria-label={T.index.tabsLabel} onKeyDown={onKey}>
           {tabs.map((t, i) => (
             <button
               key={t.id}
@@ -371,36 +384,38 @@ function Index({ tab }: { tab: string }) {
               }}
               onClick={() => setSel(i)}
             >
-              {t.name}
+              {T.sections[t.id].name}
               {t.count > 0 && <span class="home-tab-count">{t.count}</span>}
             </button>
           ))}
         </div>
         <button type="button" class="btn home-random" onClick={random} disabled={pages.length === 0}>
-          隨機看一齣
+          {T.index.random}
         </button>
       </div>
 
       <div class="home-panel" role="tabpanel" id="home-panel" aria-labelledby={`home-tab-${current.id}`}>
         {section ? (
           <>
-            <p class="home-panel-sub">{section.sub}</p>
+            <p class="home-panel-sub">{T.sections[section.id].sub}</p>
             <ul class="home-cards">
               {section.slugs.map((slug, i) => {
-                const title = titleOf.get(slug);
+                const title = titleOf(slug, lang);
                 const no = two(base + i);
                 return (
                   <li key={slug}>
                     {title !== undefined ? (
                       <a class="home-card" href={`#/${slug}`}>
                         <span class="home-card-no">{no}</span>
-                        <span class="home-card-title">{title}</span>
+                        <span class="home-card-title">
+                          <Rich text={title} />
+                        </span>
                       </a>
                     ) : (
                       <div class="home-card is-pending">
                         <span class="home-card-no">{no}</span>
                         <span class="home-card-title">{slug}</span>
-                        <span class="home-card-state">製作中</span>
+                        <span class="home-card-state">{T.index.pending}</span>
                       </div>
                     )}
                   </li>
@@ -410,7 +425,7 @@ function Index({ tab }: { tab: string }) {
           </>
         ) : (
           <>
-            <p class="home-panel-sub">{lcSection.sub}</p>
+            <p class="home-panel-sub">{T.sections.lc.sub}</p>
             {problems.length > 0 ? (
               <ul class="home-cards">
                 {problems.map((p) => (
@@ -418,13 +433,15 @@ function Index({ tab }: { tab: string }) {
                     <a class="home-card" href={`#/lc/${p.slug}`}>
                       <span class="home-card-no">#{p.number}</span>
                       <span class="home-card-title">{p.title}</span>
-                      <span class="home-card-teaser">{p.teaser}</span>
+                      <span class="home-card-teaser">
+                        <Rich text={lang === 'en' ? (TEASERS_EN[p.slug] ?? p.teaser) : p.teaser} />
+                      </span>
                     </a>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p class="home-empty">製作中</p>
+              <p class="home-empty">{T.index.pending}</p>
             )}
           </>
         )}

@@ -1,4 +1,5 @@
 import type { Verified } from '../../core/page.ts';
+import en from './en.ts';
 import { extractSolution } from '../extract.ts';
 import type { LcProblem } from '../types.ts';
 import { rows } from './rows.ts';
@@ -25,6 +26,7 @@ const problem: LcProblem = {
   rows,
   related: ['mut-borrow', 'shared-borrow'],
   verified,
+  en,
 };
 
 export default problem;

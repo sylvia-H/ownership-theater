@@ -256,6 +256,12 @@
     top: 5px;
     right: var(--gutter);
   }
+
+  /* 英文的字幕比中文長，Rust 那一句會伸到右邊蓋住重播鈕：英文模式把按鈕移到左邊標題欄的下方 */
+  :root:lang(en) .home-replay {
+    right: auto;
+    left: var(--edge);
+  }
 }
 
 /* WebGL 不可用：沒有場景，只剩標題區 */

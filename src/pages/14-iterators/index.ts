@@ -1,4 +1,7 @@
 import type { Page, Verified } from '../../core/page.ts';
+import en from './en.ts';
+import rustEn from './snippet.en.rs?raw';
+import tsEn from './snippet.en.ts?raw';
 import rust from './snippet.rs?raw';
 import ts from './snippet.ts?raw';
 import { breakIt, trace } from './trace.ts';
@@ -26,6 +29,9 @@ const page: Page = {
   },
   rust,
   ts,
+  rustEn,
+  tsEn,
+  en,
   trace,
   breakIt,
   verified,

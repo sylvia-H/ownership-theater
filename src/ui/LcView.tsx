@@ -1,14 +1,18 @@
 import { useMemo, useState } from 'preact/hooks';
 import type { Lang } from '../core/timeline.ts';
 import { problems } from '../lc/index.ts';
+import { LC_TAGS_EN } from '../lc/tags.en.ts';
 import { LC_TAGS, type LcEntry, type LcProblem, type LcTag } from '../lc/types.ts';
 import { pages } from '../pages/index.ts';
+import { TITLES_EN } from '../pages/titles.en.ts';
+import { Rich } from './Rich.tsx';
 import { tokenize, type Token } from './highlight.ts';
+import { stripInlineCode } from './inline.ts';
+import { STRINGS, type Strings } from './strings.ts';
+import { useLang } from './useLang.ts';
 import './lc.css';
 
 const TAG_KEYS = Object.keys(LC_TAGS) as LcTag[];
-
-const LEGEND_IDLE = '灰色的行兩邊一對一對應；亮起來的是 Rust 多出來的。滑到類別上，只看那一類。';
 
 interface CodeLine {
   /** 去掉開頭縮排之後的內容 */
@@ -37,6 +41,13 @@ const two = (n: number) => String(n).padStart(2, '0');
 export function LcView({ problem }: { problem: LcProblem }) {
   /** 圖例上滑到（或聚焦）的類別：只亮那一類的列 */
   const [hl, setHl] = useState<LcTag | null>(null);
+  const lang = useLang();
+  const S = STRINGS[lang];
+  const tags = lang === 'en' ? LC_TAGS_EN : LC_TAGS;
+  /** 英文模式下這一題的英文內容；解法、對齊表、驗證結果兩個語言共用 */
+  const en = lang === 'en' ? problem.en : undefined;
+  const summary = en?.summary ?? problem.summary;
+  const lead = en?.lead ?? problem.lead;
 
   const tsLines = useMemo(() => toLines(problem.ts, 'ts'), [problem.ts]);
   const rustLines = useMemo(() => toLines(problem.rust, 'rust'), [problem.rust]);
@@ -54,7 +65,7 @@ export function LcView({ problem }: { problem: LcProblem }) {
   const related = problem.related.flatMap((slug) => {
     const i = pages.findIndex((p) => p.slug === slug);
     const page = pages[i];
-    return page ? [{ slug, no: two(i + 1), title: page.title }] : [];
+    return page ? [{ slug, no: two(i + 1), title: (lang === 'en' ? TITLES_EN[slug] : undefined) ?? page.title }] : [];
   });
 
   const files = Object.values(problem.verified.files);
@@ -80,26 +91,28 @@ export function LcView({ problem }: { problem: LcProblem }) {
     <main class="lc" onCopy={onCopy}>
       <header class="lc-header">
         <p class="kicker">
-          LeetCode 對照 · #{problem.number} · {problem.difficulty}
+          {S.lcKicker} · #{problem.number} · {problem.difficulty}
         </p>
         <div class="lc-title">
           <h1>{problem.title}</h1>
           <a class="lc-source" href={problem.url} target="_blank" rel="noreferrer">
-            在 LeetCode 看題目
+            {S.lcSource}
             <span aria-hidden="true"> ↗</span>
           </a>
         </div>
-        <p class="lc-summary">{problem.summary}</p>
-        {problem.lead.map((text) => (
+        <p class="lc-summary">
+          <Rich text={summary} />
+        </p>
+        {lead.map((text) => (
           <p class="lc-lead" key={text}>
-            {text}
+            <Rich text={text} />
           </p>
         ))}
       </header>
 
       <section class="lc-diff" aria-labelledby="lc-diff-title">
         <h2 id="lc-diff-title" class="lc-h2">
-          逐行對照
+          {S.lcDiffTitle}
         </h2>
 
         <div class="lc-legend">
@@ -119,10 +132,10 @@ export function LcView({ problem }: { problem: LcProblem }) {
                     onBlur={() => setHl(null)}
                   >
                     <i class="lc-swatch" aria-hidden="true" />
-                    {LC_TAGS[tag].label}
+                    {tags[tag].label}
                     <span class="lc-legend-count">
                       {n}
-                      <span class="lc-sr"> 列</span>
+                      <span class="lc-sr">{S.lcRowsUnit(n)}</span>
                     </span>
                   </button>
                 </li>
@@ -130,7 +143,7 @@ export function LcView({ problem }: { problem: LcProblem }) {
             })}
           </ul>
           <p class="lc-legend-hint" id="lc-legend-hint" aria-live="polite">
-            {hl ? `${LC_TAGS[hl].label}：${LC_TAGS[hl].hint}` : LEGEND_IDLE}
+            {hl ? S.lcLabelled(tags[hl].label, tags[hl].hint) : S.lcLegendIdle}
           </p>
         </div>
 
@@ -138,7 +151,7 @@ export function LcView({ problem }: { problem: LcProblem }) {
           <div class="lc-head">
             <h3 class="lc-col lc-col-ts">TypeScript</h3>
             <h3 class="lc-col lc-col-rust">Rust</h3>
-            <h3 class="lc-col lc-col-note">Rust 多出來的</h3>
+            <h3 class="lc-col lc-col-note">{S.lcNoteColumn}</h3>
           </div>
 
           {problem.rows.map((row, i) => {
@@ -147,21 +160,23 @@ export function LcView({ problem }: { problem: LcProblem }) {
             const lit = hl !== null && tag === hl;
             const cls =
               'lc-row' + (tag ? ` has-tag t-${tag}` : '') + (dim ? ' is-dim' : '') + (lit ? ' is-lit' : '');
-            const label = tag ? LC_TAGS[tag].label : '';
+            const label = tag ? tags[tag].label : '';
+            // 英文的註記以 Rust 行號為鍵（有 tag 的列一定有 Rust 行號）
+            const note = (en && row.rust !== null ? en.notes[row.rust] : undefined) ?? row.note;
             return (
               <div
                 key={i}
                 class={cls}
                 tabIndex={tag ? 0 : undefined}
                 role={tag ? 'group' : undefined}
-                aria-label={tag ? `${label}${row.note ? `：${row.note}` : ''}` : undefined}
+                aria-label={tag ? (note ? S.lcLabelled(label, stripInlineCode(note)) : label) : undefined}
               >
                 <Cell col="ts" no={row.ts} line={row.ts === null ? undefined : tsLines[row.ts - 1]} />
                 <Cell col="rust" no={row.rust} line={row.rust === null ? undefined : rustLines[row.rust - 1]} />
                 {tag && (
                   <p class="lc-note" data-col="note">
                     <span class="lc-note-tag">{label}</span>
-                    {row.note}
+                    {note && <Rich text={note} />}
                   </p>
                 )}
               </div>
@@ -175,21 +190,23 @@ export function LcView({ problem }: { problem: LcProblem }) {
         </div>
 
         {verified && (
-          <p class="lc-verified">Rust 這一份連同測試用 rustc {problem.verified.rustc} 實際編譯、執行過。</p>
+          <p class="lc-verified">{S.lcVerified(problem.verified.rustc)}</p>
         )}
       </section>
 
       {related.length > 0 && (
         <section class="lc-related" aria-labelledby="lc-related-title">
           <h2 id="lc-related-title" class="lc-h2">
-            這題用到的概念，在劇場裡演過
+            {S.lcRelatedTitle}
           </h2>
           <ul class="lc-related-cards">
             {related.map((r) => (
               <li key={r.slug}>
                 <a class="lc-card" href={`#/${r.slug}`}>
                   <span class="lc-card-no">{r.no}</span>
-                  <span class="lc-card-title">{r.title}</span>
+                  <span class="lc-card-title">
+                    <Rich text={r.title} />
+                  </span>
                 </a>
               </li>
             ))}
@@ -197,12 +214,12 @@ export function LcView({ problem }: { problem: LcProblem }) {
         </section>
       )}
 
-      <nav class="lc-nav" aria-label="其他題目">
-        <NavLink entry={prev} dir="prev" />
+      <nav class="lc-nav" aria-label={S.lcNavLabel}>
+        <NavLink entry={prev} dir="prev" S={S} />
         <a class="lc-nav-index" href="#/?tab=lc">
-          回首頁的分區索引
+          {S.lcBackToIndex}
         </a>
-        <NavLink entry={next} dir="next" />
+        <NavLink entry={next} dir="next" S={S} />
       </nav>
     </main>
   );
@@ -225,13 +242,13 @@ function Cell({ col, no, line }: { col: 'ts' | 'rust'; no: number | null; line: 
   );
 }
 
-function NavLink({ entry, dir }: { entry: LcEntry | undefined; dir: 'prev' | 'next' }) {
-  const label = dir === 'prev' ? '上一題' : '下一題';
+function NavLink({ entry, dir, S }: { entry: LcEntry | undefined; dir: 'prev' | 'next'; S: Strings }) {
+  const label = dir === 'prev' ? S.prevProblem : S.nextProblem;
   if (!entry) {
     return (
       <span class={`lc-nav-link is-${dir} is-disabled`} role="link" aria-disabled="true">
         <span class="lc-nav-dir">{label}</span>
-        <span class="lc-nav-title">{dir === 'prev' ? '這是第一題' : '這是最後一題'}</span>
+        <span class="lc-nav-title">{dir === 'prev' ? S.lcFirst : S.lcLast}</span>
       </span>
     );
   }

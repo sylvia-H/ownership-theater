@@ -20,5 +20,5 @@
     "types": ["vite/client", "node"]
   },
   "include": ["src"],
-  "exclude": ["src/pages/**/snippet.ts", "src/lc/**/solution.ts"]
+  "exclude": ["src/pages/**/snippet.ts", "src/pages/**/snippet.en.ts", "src/lc/**/solution.ts"]
 }

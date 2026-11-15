@@ -586,16 +586,24 @@ button.line:focus-visible {
     position: relative;
   }
 
+  /* z-index：.break 是 .main 的絕對定位子元素，.stage 自己是 position: relative，文件順序又排在 .break 前面的
+     canvas 會蓋住它；沒有 z-index 的話按鈕看不到也點不到。rustc 面板在 .stage 裡面、貼著底部，兩者不重疊。 */
   .break {
     position: absolute;
-    top: var(--s3);
-    right: var(--s3);
+    z-index: 1;
+    top: var(--s1);
+    right: var(--s2);
     display: grid;
     justify-items: end;
     gap: var(--s1);
-    max-width: calc(100% - 2 * var(--s3));
+    max-width: calc(100% - 2 * var(--s2));
     padding: 0;
     border-top: 0;
+  }
+
+  /* 貼著場景上緣、行高收緊：內容較高的頁，世界標題離上緣只有 30px 左右，按鈕要停在標題的字上方 */
+  .break-btn {
+    line-height: 1.4;
   }
 }
 
