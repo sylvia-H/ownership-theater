@@ -1,0 +1,14 @@
+{
+  "rustc": "1.100.0",
+  "checkedAt": "2026-11-15T18:50:50.328Z",
+  "files": {
+    "solution.rs": {
+      "sha256": "c2ad3d4b03e3126a1494d07612f36504a22a730a620e945e59195009013c54d5",
+      "expect": "pass",
+      "success": true,
+      "message": "",
+      "stdout": "[5, 4, 3, 2, 1]\n[2, 1]\n[]\n",
+      "stderr": "   Compiling playground v0.0.1 (/playground)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.53s\n     Running `target/debug/playground`\n"
+    }
+  }
+}
