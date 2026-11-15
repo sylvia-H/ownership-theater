@@ -2,6 +2,10 @@
 
 不做翻譯機，做一本會動的圖鑑：讓只會 TS／JS 的工程師看到「值在記憶體裡的命運」在 Rust 與 JS 有什麼不同。
 
+線上版：<https://sylvia-h.github.io/ownership-theater/>
+
+推送到 `main` 會由 `.github/workflows/deploy.yml` 自動跑測試、build 並發布到 GitHub Pages；測試或首屏體積檢查不過就不會發布。
+
 ## 指令
 
 | 指令 | 用途 |
