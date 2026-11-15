@@ -2,6 +2,8 @@
 
 不做翻譯機，做一本會動的圖鑑：讓只會 TS／JS 的工程師看到「值在記憶體裡的命運」在 Rust 與 JS 有什麼不同。
 
+**Ownership Theater** is an interactive site that teaches Rust ownership to engineers who write JavaScript or TypeScript and have not written Rust. Each of its 17 acts plays the same code on a 3D stage twice, once in the JS world and once in the Rust world, so you can watch what happens to a value when it is assigned, borrowed, moved, and dropped. A separate section puts TS and Rust solutions to five LeetCode problems side by side and highlights what Rust adds. The live site is at <https://sylvia-h.github.io/ownership-theater/>, and you can switch it between Traditional Chinese and English. The English version opens directly at <https://sylvia-h.github.io/ownership-theater/#/?lang=en>.
+
 線上版：<https://sylvia-h.github.io/ownership-theater/>
 
 ![第一頁的演出：let b = a 之後，值在 JS 世界多一條線、在 Rust 世界整顆搬走，離開範圍時當場碎掉](docs/demo.webp)
@@ -46,13 +48,15 @@
 | 檔案 | 內容 |
 | --- | --- |
 | `snippet.rs`、`snippet.ts` | 兩邊的程式碼。 |
+| `snippet.en.rs`、`snippet.en.ts` | 片段裡有中文（註解、字串）才需要：英文模式顯示的版本，只翻中文，行數與每一行的行號必須與原片段相同。`snippet.en.rs` 也要寫進 `expect.json`，用 rustc 驗過。 |
 | `broken.rs` | 「弄壞它」對應的版本：編譯失敗，或編譯通過但執行時 panic。沒有「弄壞它」的頁沒有這個檔案。 |
 | `expect.json` | 每個 `.rs` 的期望：`pass`、rustc 錯誤碼（例如 `E0382`），或 `panic`。 |
 | `verified.json` | `npm run verify:rust` 產生，不要手改。 |
 | `trace.ts` | 手寫的軌跡，以及「弄壞它」的設定（沒有的頁匯出 `breakIt = null`）。 |
+| `en.ts` | 英文內容（`PageEn`，見 `src/core/page.ts`）：kicker、title、lead、每一步的字幕、「弄壞它」的 hint 與 plain。句子裡的變數名與程式碼用反引號標出來。 |
 | `index.ts` | 把以上組成一頁。 |
 
-新增一頁還要在 `src/pages/index.ts` 註冊。
+新增一頁還要在 `src/pages/index.ts` 註冊，並把英文標題加進 `src/pages/titles.en.ts`（首頁與對照頁不先載入各頁，標題取自這裡；必須與該頁 `en.ts` 的 `title` 相同）。
 
 ## 新增一頁
 
@@ -62,6 +66,7 @@
 4. 寫軌跡 `trace.ts`，組成 `index.ts`，在 `src/pages/index.ts` 註冊。
 5. 跑 `npm test`。
 6. 寫白話說明與 Rust Book 引文。引文要對過官方原文。
+7. 寫英文：`en.ts`，片段裡有中文的話加 `snippet.en.ts`／`snippet.en.rs`，並在 `src/pages/titles.en.ts` 加標題。再跑一次 `npm test`（`src/i18n.test.ts` 會檢查字幕數、標題是否一致、英文版片段的行數，以及英文內容裡有沒有殘留的中文）。
 
 ## LeetCode 對照區
 
@@ -75,9 +80,10 @@
 | `expect.json` | 固定是 `{ "solution.rs": "pass" }`。 |
 | `verified.json` | `npm run verify:rust -- lc/NN-slug` 產生，不要手改。送去編譯的是整個 `solution.rs`。 |
 | `rows.ts` | 手寫的逐行對齊表，格式與規則見 `src/lc/types.ts`。 |
+| `en.ts` | 英文內容（`LcEn`）：summary、lead、teaser，以及以 Rust 行號為鍵的 notes。 |
 | `index.ts` | 把以上組成一題。 |
 
-新增一題還要在 `src/lc/index.ts` 註冊。
+新增一題還要在 `src/lc/index.ts` 註冊，並把英文的 teaser 加進 `src/lc/teasers.en.ts`（必須與該題 `en.ts` 的 `teaser` 相同）。
 
 **標記**：`solution.rs` 與 `solution.ts` 各用兩行註解把顯示給讀者的解法框起來，標記之外的測試外殼不顯示。`rows.ts` 的行號是標記之間的行號，從 1 起算。
 
@@ -96,6 +102,10 @@ fn main() { /* 跑測資、println! 結果 */ }
 `solution.ts` 要能用 `node solution.ts` 直接執行，所以只能用可抹除的型別語法；解法照 LeetCode 上的寫法，不跟著專案較嚴的 tsconfig 檢查（`tsconfig.json` 的 `exclude` 排除了 `src/lc/**/solution.ts`）。
 
 **驗證**：改過 `solution.rs` 就重跑 `npm run verify:rust -- lc/NN-slug`，再跑 `npm test`。測試（`src/lc/lc.test.ts`）檢查三件事：rustc 驗過的是目前這份 `solution.rs`，而且沒有 warning；實際執行 `node solution.ts` 的輸出與 Rust 版逐字相同；`rows.ts` 涵蓋兩邊解法的每一行，各出現一次。
+
+## 語言
+
+介面語言（繁體中文／English）由 `src/ui/lang.ts` 管：網址 hash 的 `lang` 參數（`#/move?lang=en`）優先，其次是 localStorage 記住的選擇，再其次看瀏覽器語言。元件裡的介面字串在 `src/ui/strings.ts`，首頁的文字在 `src/ui/home.zh.ts`／`home.en.ts`，兩邊的鍵由型別與測試保證相同。
 
 ## 效能原則
 
