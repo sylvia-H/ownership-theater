@@ -1,0 +1,22 @@
+{
+  "rustc": "1.100.0",
+  "checkedAt": "2026-11-15T14:11:54.241Z",
+  "files": {
+    "snippet.rs": {
+      "sha256": "b187264d63d80122b2f192f9826a67177dfd0d0a64d773d0fd503fa756b9e03a",
+      "expect": "pass",
+      "success": true,
+      "message": "",
+      "stdout": "[1, 2, 3, 4]\n",
+      "stderr": "   Compiling playground v0.0.1 (/playground)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.55s\n     Running `target/debug/playground`\n"
+    },
+    "broken.rs": {
+      "sha256": "9b62ad2182199bc6c20646ff9ab36cd2e2e60e26e6ffc7d10ff7f26e5d72cc22",
+      "expect": "panic",
+      "success": false,
+      "message": "thread 'main' (13) panicked at src/main.rs:7:23:\nRefCell already borrowed",
+      "stdout": "",
+      "stderr": "   Compiling playground v0.0.1 (/playground)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.56s\n     Running `target/debug/playground`\n\nthread 'main' (13) panicked at src/main.rs:7:23:\nRefCell already borrowed\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    }
+  }
+}
