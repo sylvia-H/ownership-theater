@@ -1,0 +1,22 @@
+{
+  "rustc": "1.100.0",
+  "checkedAt": "2026-11-15T14:11:33.680Z",
+  "files": {
+    "snippet.rs": {
+      "sha256": "d68c83ad48ec3aaf0526fc1a269e3257b6272aa15a2db41d857dde13b6413292",
+      "expect": "pass",
+      "success": true,
+      "message": "",
+      "stdout": "same\n",
+      "stderr": "   Compiling playground v0.0.1 (/playground)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.55s\n     Running `target/debug/playground`\n"
+    },
+    "broken.rs": {
+      "sha256": "70418fec3ce48428a60dc736d236f7af567fc6850d49ba76618bf367644ce1a7",
+      "expect": "E0004",
+      "success": false,
+      "message": "error[E0004]: non-exhaustive patterns: `std::cmp::Ordering::Equal` not covered\n   --> src/main.rs:4:22\n    |\n  4 |     let text = match order {\n    |                      ^^^^^ pattern `std::cmp::Ordering::Equal` not covered\n    |\nnote: `std::cmp::Ordering` defined here\n   --> /playground/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/cmp.rs:420:1\n    |\n420 | pub enum Ordering {\n    | ^^^^^^^^^^^^^^^^^\n...\n426 |     Equal = 0,\n    |     ----- not covered\n    = note: the matched value is of type `std::cmp::Ordering`\nhelp: ensure that all possible cases are being handled by adding a match arm with a wildcard pattern or an explicit pattern as shown\n    |\n  6 ~         Ordering::Greater => \"bigger\",\n  7 ~         std::cmp::Ordering::Equal => todo!(),\n    |",
+      "stdout": "",
+      "stderr": "   Compiling playground v0.0.1 (/playground)\nerror[E0004]: non-exhaustive patterns: `std::cmp::Ordering::Equal` not covered\n   --> src/main.rs:4:22\n    |\n  4 |     let text = match order {\n    |                      ^^^^^ pattern `std::cmp::Ordering::Equal` not covered\n    |\nnote: `std::cmp::Ordering` defined here\n   --> /playground/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/cmp.rs:420:1\n    |\n420 | pub enum Ordering {\n    | ^^^^^^^^^^^^^^^^^\n...\n426 |     Equal = 0,\n    |     ----- not covered\n    = note: the matched value is of type `std::cmp::Ordering`\nhelp: ensure that all possible cases are being handled by adding a match arm with a wildcard pattern or an explicit pattern as shown\n    |\n  6 ~         Ordering::Greater => \"bigger\",\n  7 ~         std::cmp::Ordering::Equal => todo!(),\n    |\n\nFor more information about this error, try `rustc --explain E0004`.\nerror: could not compile `playground` (bin \"playground\") due to 1 previous error\n"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "rustc": "1.100.0",
+  "checkedAt": "2026-11-15T14:11:38.665Z",
+  "files": {
+    "snippet.rs": {
+      "sha256": "c5976a15ce86cc2f2abe03637b448cdeaf5655198ef458b7484d91e6791742b5",
+      "expect": "pass",
+      "success": true,
+      "message": "",
+      "stdout": "error: invalid digit found in string\n",
+      "stderr": "   Compiling playground v0.0.1 (/playground)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.55s\n     Running `target/debug/playground`\n"
+    },
+    "broken.rs": {
+      "sha256": "2f6dcaf782c12f1cf356f5099cafb739dbf101100048902659def522a5cf1b0d",
+      "expect": "E0369",
+      "success": false,
+      "message": "error[E0369]: cannot add `{integer}` to `Result<i32, ParseIntError>`\n   --> src/main.rs:3:27\n    |\n  3 |     println!(\"{}\", result + 1);\n    |                    ------ ^ - {integer}\n    |                    |\n    |                    Result<i32, ParseIntError>\n    |\nnote: `Result<i32, ParseIntError>` does not implement `Add<{integer}>`\n   --> /playground/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/result.rs:558:1\n    |\n558 | pub enum Result<T, E> {\n    | ^^^^^^^^^^^^^^^^^^^^^ `Result<i32, ParseIntError>` is defined in another crate",
+      "stdout": "",
+      "stderr": "   Compiling playground v0.0.1 (/playground)\nerror[E0369]: cannot add `{integer}` to `Result<i32, ParseIntError>`\n   --> src/main.rs:3:27\n    |\n  3 |     println!(\"{}\", result + 1);\n    |                    ------ ^ - {integer}\n    |                    |\n    |                    Result<i32, ParseIntError>\n    |\nnote: `Result<i32, ParseIntError>` does not implement `Add<{integer}>`\n   --> /playground/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/result.rs:558:1\n    |\n558 | pub enum Result<T, E> {\n    | ^^^^^^^^^^^^^^^^^^^^^ `Result<i32, ParseIntError>` is defined in another crate\n\nFor more information about this error, try `rustc --explain E0369`.\nerror: could not compile `playground` (bin \"playground\") due to 1 previous error\n"
+    }
+  }
+}
