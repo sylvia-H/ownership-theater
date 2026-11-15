@@ -52,6 +52,8 @@ export interface LcProblem {
   related: string[];
   /** rustc 對完整程式（含測試外殼）的實測結果 */
   verified: Verified;
+  /** 這一題的英文內容，跟著這一題一起載入 */
+  en?: LcEn;
 }
 
 export interface LcEntry {
@@ -61,4 +63,14 @@ export interface LcEntry {
   /** 首頁卡片上的一句話，30 字以內 */
   teaser: string;
   load: () => Promise<LcProblem>;
+}
+
+/** 一題的英文內容（各題資料夾裡的 en.ts，default export）。解法、對齊表、驗證結果都共用。 */
+export interface LcEn {
+  summary: string;
+  lead: string[];
+  /** 首頁卡片上的一句話 */
+  teaser: string;
+  /** 有 tag 的列的註記。鍵是該列的 Rust 行號（有 tag 的列一定有 Rust 行號） */
+  notes: Record<number, string>;
 }

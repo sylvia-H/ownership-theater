@@ -118,7 +118,8 @@ export type World = 'js' | 'rust';
  *   beam     RefCell 的執行期借用也是光束（守衛變數的那一道在快照裡；cell-use 的只在那一步中途由 stateAt 產生，
  *            從擁有者的夾具照到值，id 是 `rust:flash:<i>`）
  *   crystal  cell 是 1 時外面多一層 RefCell 的殼，lent／solid 是殼上登記的借用
- *   note     只有文字的標示：Rc 值下方的引用計數（`計數 2`）。值碎掉之後留著 `計數 0`（alpha 較低）
+ *   note     只有文字的標示：Rc 值下方的引用計數（`計數 2`）。值碎掉之後留著 `計數 0`（alpha 較低）。
+ *            數字另外放在 count：顯示端依介面語言組出文字（`count 2`），label 是中文的預設寫法
  *   pipe     管線的一段：從（x2、y2）接到這一段的節點（x、y），grow 是接上去的比例 0..1；label 是這一段的名字。
  *            label 是空字串的是 collect 接上的出口（沒有節點，終點在產出的值上方）
  *   item     流過管線的一個值（小菱形，標籤在下方）。不在任何快照裡，只在 pull 那一步的中途由 stateAt 產生
@@ -135,6 +136,8 @@ export interface Visual {
   world: World;
   kind: VisualKind;
   label: string;
+  /** 只有引用計數的 note 有：計數的數字，與語言無關 */
+  count?: number;
   /** link 連到哪一顆 orb／bead */
   ref: string | null;
   /** 各世界自己的區域座標，原點在世界中心；場景負責把兩個世界擺開 */
@@ -642,7 +645,7 @@ function layoutRust(s: RustState, plan: Plan): Map<string, Visual> {
       c.y = p.y + COUNT_DY;
       c.alpha = v.alive ? 1 : 0.6;
       out.set(rustCountId(id), {
-        id: rustCountId(id), world: 'rust', kind: 'note', label: `計數 ${v.owners.length}`, ref: null, n: c,
+        id: rustCountId(id), world: 'rust', kind: 'note', label: `計數 ${v.owners.length}`, count: v.owners.length, ref: null, n: c,
       });
     }
   }
@@ -1171,8 +1174,11 @@ export function stateAt(tl: Timeline, t: number): Visual[] {
       if (flash.mut) n.solid = Math.max(n.solid, Math.sin(Math.PI * f));
     }
     // 標籤不能內插：改值（mutate）那一步演到一半才換成新的，整數 t 永遠是該張快照的標籤
-    const label = (f < 0.5 ? (va ?? vb) : (vb ?? va))!.label;
-    out.push({ ...base, label, n });
+    const shown = (f < 0.5 ? (va ?? vb) : (vb ?? va))!;
+    const visual: Visual = { ...base, label: shown.label, n };
+    // 計數的數字跟著標籤一起換
+    if (shown.count !== undefined) visual.count = shown.count;
+    out.push(visual);
   }
 
   const slip = mid ? (tl.slips[k] ?? null) : null;

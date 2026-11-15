@@ -1,5 +1,8 @@
 import type { RefObject } from 'preact';
 import type { Step } from '../core/trace.ts';
+import { Rich } from './Rich.tsx';
+import { STRINGS } from './strings.ts';
+import { useLang } from './useLang.ts';
 
 interface Props {
   steps: number;
@@ -17,33 +20,34 @@ interface Props {
 
 export function Timeline(p: Props) {
   const done = p.idx + 1;
+  const S = STRINGS[useLang()];
   return (
-    <section class="timeline" aria-label="時間軸">
+    <section class="timeline" aria-label={S.timeline}>
       <div class="caption" aria-live="polite">
         {p.step ? (
           <>
             <p class="cap cap-js">
               <span class="cap-tag">JS</span>
-              {p.step.caption.js}
+              <Rich text={p.step.caption.js} />
             </p>
             <p class="cap cap-rust">
               <span class="cap-tag">Rust</span>
-              {p.step.caption.rust}
+              <Rich text={p.step.caption.rust} />
             </p>
           </>
         ) : (
-          <p class="cap cap-idle">拖動滑桿，或按 → 開始</p>
+          <p class="cap cap-idle">{S.timelineIdle}</p>
         )}
       </div>
       <div class="transport">
         <div class="transport-buttons">
-          <button type="button" class="btn" onClick={p.onPrev} disabled={p.idx < 0} aria-label="上一步">
+          <button type="button" class="btn" onClick={p.onPrev} disabled={p.idx < 0} aria-label={S.prevStep}>
             ‹
           </button>
           <button type="button" class="btn btn-play" onClick={p.onTogglePlay} aria-pressed={p.playing}>
-            {p.playing ? '暫停' : '播放'}
+            {p.playing ? S.pause : S.play}
           </button>
-          <button type="button" class="btn" onClick={p.onNext} disabled={done >= p.steps} aria-label="下一步">
+          <button type="button" class="btn" onClick={p.onNext} disabled={done >= p.steps} aria-label={S.nextStep}>
             ›
           </button>
         </div>
@@ -55,8 +59,8 @@ export function Timeline(p: Props) {
             min={0}
             max={p.steps}
             step={0.001}
-            aria-label="時間軸"
-            aria-valuetext={`第 ${done} 步，共 ${p.steps} 步`}
+            aria-label={S.timeline}
+            aria-valuetext={S.stepOf(done, p.steps)}
             onInput={(e) => p.onScrub(Number(e.currentTarget.value))}
             onChange={p.onRelease}
           />

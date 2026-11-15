@@ -1,11 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { localizePage } from '../core/localize.ts';
 import type { Page } from '../core/page.ts';
 import { breakRange, buildTimeline, idsForLine, linesForId, type Lang } from '../core/timeline.ts';
 import { Stage } from '../scene/stage.ts';
 import { CodePanel } from './CodePanel.tsx';
+import { Rich } from './Rich.tsx';
 import { Timeline } from './Timeline.tsx';
 import { createClock, prefersReducedMotion } from './clock.ts';
+import { attachSound, playBreak } from './sound.ts';
 import { createStore } from './store.ts';
+import { STRINGS } from './strings.ts';
+import { useLang } from './useLang.ts';
 
 const STEP_MS = 650;
 const PLAY_MS = 900;
@@ -17,7 +22,12 @@ const lineSet = (lines: (number | null)[]): ReadonlySet<number> =>
   new Set(lines.filter((l): l is number => l !== null));
 
 export function PageView({ page, initialT }: { page: Page; initialT: number }) {
+  // 軌跡與「弄壞它」的設定一律用原本那一份：時間軸、場景、音效都建在它上面，換語言時不重建，t 也就不會動。
+  // 顯示給讀者的文字（標題、說明、字幕、程式碼註解）才看 view。
   const { trace, breakIt } = page;
+  const lang = useLang();
+  const S = STRINGS[lang];
+  const view = useMemo(() => (lang === 'en' && page.en ? localizePage(page, page.en) : page), [page, lang]);
   const tl = useMemo(() => buildTimeline(trace), [trace]);
   const range = useMemo(() => (breakIt ? breakRange(tl, breakIt) : null), [tl, breakIt]);
   const total = tl.steps;
@@ -102,6 +112,9 @@ export function PageView({ page, initialT }: { page: Page; initialT: number }) {
     return store.subscribe(apply);
   }, [store, range]);
 
+  // 音效：直接訂閱 store，不經過 Preact
+  useEffect(() => attachSound(store, trace, tl), [store, trace, tl]);
+
   // 場景
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -122,6 +135,7 @@ export function PageView({ page, initialT }: { page: Page; initialT: number }) {
         },
         onBreak() {
           setBroken(true);
+          playBreak();
         },
       });
     } catch {
@@ -138,6 +152,16 @@ export function PageView({ page, initialT }: { page: Page; initialT: number }) {
       stageRef.current = null;
     };
   }, [tl, trace, breakIt, store]);
+
+  // 舞台上由程式產生的文字跟著語言走（排在建立場景的 effect 之後，場景重建時也會再設一次）
+  useEffect(() => {
+    stageRef.current?.setTexts({
+      jsWorld: S.jsWorld,
+      rustWorld: S.rustWorld,
+      count: S.count,
+      labels: lang === 'en' ? page.en?.labels : undefined,
+    });
+  }, [lang, page, tl, trace, breakIt, store]);
 
   // 鍵盤 ← →
   useEffect(() => {
@@ -163,7 +187,7 @@ export function PageView({ page, initialT }: { page: Page; initialT: number }) {
     [clock],
   );
 
-  const step = idx >= 0 ? trace.steps[idx] : undefined;
+  const step = idx >= 0 ? view.trace.steps[idx] : undefined;
   const pickable = useMemo(
     () => ({
       rust: lineSet(trace.steps.map((s) => s.rustLine)),
@@ -195,15 +219,19 @@ export function PageView({ page, initialT }: { page: Page; initialT: number }) {
     <main class="page">
       <div class="side">
         <header class="prose">
-          <p class="kicker">{page.kicker}</p>
-          <h1>{page.title}</h1>
-          {page.lead.map((text, i) => (
-            <p key={i}>{text}</p>
+          <p class="kicker">{view.kicker}</p>
+          <h1>
+            <Rich text={view.title} />
+          </h1>
+          {view.lead.map((text, i) => (
+            <p key={i}>
+              <Rich text={text} />
+            </p>
           ))}
         </header>
         <div class="codes">
-          {panel('ts', 'TypeScript', page.ts)}
-          {panel('rust', 'Rust', page.rust)}
+          {panel('ts', 'TypeScript', view.ts)}
+          {panel('rust', 'Rust', view.rust)}
         </div>
         <figure class="book">
           <blockquote lang="en">
@@ -215,36 +243,40 @@ export function PageView({ page, initialT }: { page: Page; initialT: number }) {
             <a href={page.book.url} target="_blank" rel="noreferrer">
               {page.book.cite}
             </a>
-            <a href={page.book.urlZh} target="_blank" rel="noreferrer">
-              繁中譯本
-            </a>
+            {S.bookZh && (
+              <a href={page.book.urlZh} target="_blank" rel="noreferrer">
+                {S.bookZh}
+              </a>
+            )}
           </figcaption>
         </figure>
       </div>
 
       <div class="main">
-        <section class="stage" aria-label="場景">
+        <section class="stage" aria-label={S.stageLabel}>
           <div class="stage-view">
             <canvas ref={canvasRef} aria-hidden="true" />
             <div class="labels" ref={labelsRef} aria-hidden="true" />
           </div>
           {glFailed && (
-            <p class="stage-fallback">這個瀏覽器無法啟用 WebGL，場景無法顯示；程式碼與說明仍可閱讀。</p>
+            <p class="stage-fallback">{S.webglFailed}</p>
           )}
           {breakIt && broken && (
             <div class="rustc" role="alert">
               <div class="rustc-head">
                 <h2>
                   {breakIt.expect === 'panic'
-                    ? `執行時 panic（rustc ${page.verified.rustc}）：`
-                    : `rustc ${page.verified.rustc} 說：`}
+                    ? S.rustcPanic(page.verified.rustc)
+                    : S.rustcSays(page.verified.rustc)}
                 </h2>
-                <button type="button" class="btn rustc-close" onClick={() => setBroken(false)} aria-label="關閉">
+                <button type="button" class="btn rustc-close" onClick={() => setBroken(false)} aria-label={S.close}>
                   ×
                 </button>
               </div>
               <pre tabIndex={0}>{rustcMessage}</pre>
-              <p class="rustc-plain">{breakIt.plain}</p>
+              <p class="rustc-plain">
+                <Rich text={view.breakIt?.plain ?? breakIt.plain} />
+              </p>
             </div>
           )}
         </section>
@@ -260,9 +292,12 @@ export function PageView({ page, initialT }: { page: Page; initialT: number }) {
                 else goTo(range.from, STEP_MS);
               }}
             >
-              {breakIt.hint}
+              {/* 包一層：按鈕是 flex，行內程式碼不能各自變成一個 flex 項目 */}
+              <span>
+                <Rich text={view.breakIt?.hint ?? breakIt.hint} />
+              </span>
             </button>
-            {!inRange && <p class="break-note">先走到第 {range.from} 步</p>}
+            {!inRange && <p class="break-note">{S.goToStepFirst(range.from)}</p>}
           </div>
         )}
 

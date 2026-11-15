@@ -36,6 +36,11 @@ export interface Page {
   /** 程式碼原文 */
   rust: string;
   ts: string;
+  /** 英文版的程式碼（只有註解與字串不同，行號完全相同）；片段裡沒有中文的頁省略，英文模式用原文 */
+  rustEn?: string;
+  tsEn?: string;
+  /** 這一頁的英文內容，跟著這一頁一起載入；用 core/localize.ts 的 localizePage 套上去 */
+  en?: PageEn;
   trace: Trace;
   breakIt: BreakIt | null;
   verified: Verified;
@@ -45,4 +50,20 @@ export interface PageEntry {
   slug: string;
   title: string;
   load: () => Promise<Page>;
+}
+
+/**
+ * 一頁的英文內容（各頁資料夾裡的 en.ts，default export）。中文是原文，放在 index.ts 與 trace.ts；
+ * 英文只覆蓋「顯示給讀者的文字」，程式碼、軌跡事件、rustc 訊息、Rust Book 引文都共用。
+ */
+export interface PageEn {
+  kicker: string;
+  title: string;
+  lead: string[];
+  /** 與 trace.steps 一一對應，長度必須相同 */
+  captions: { js: string; rust: string }[];
+  /** 該頁有「弄壞它」才有 */
+  breakIt?: { hint: string; plain: string };
+  /** 舞台上出現的中文標籤（值的標籤、框的名字等）→ 英文。鍵是軌跡裡的原字串；沒有中文標籤就省略 */
+  labels?: Record<string, string>;
 }

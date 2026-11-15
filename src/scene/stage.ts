@@ -27,6 +27,7 @@ import {
   type Timeline,
   type World,
 } from '../core/timeline.ts';
+import { localizeLabel } from '../core/localize.ts';
 import type { BreakIt } from '../core/trace.ts';
 import {
   KIND_BOX,
@@ -190,6 +191,18 @@ const additive = (vertexShader: string, fragmentShader: string, uniforms: Shader
     depthWrite: false,
   });
 
+/** 舞台上由程式產生的文字，依介面語言由 UI 設定 */
+export interface StageTexts {
+  jsWorld: string;
+  rustWorld: string;
+  /** 引用計數標籤的前綴：`計數 2`、`count 2` */
+  count: string;
+  /** 軌跡裡的標籤 → 這個語言的寫法；沒有要換的就省略 */
+  labels?: Record<string, string>;
+}
+
+const DEFAULT_TEXTS: StageTexts = { jsWorld: 'JS 世界', rustWorld: 'Rust 世界', count: '計數' };
+
 export class Stage {
   private readonly canvas: HTMLCanvasElement;
   private readonly labels: HTMLElement;
@@ -215,6 +228,7 @@ export class Stage {
   private range: { from: number; to: number } | null = null;
   private t = 0;
   private hl: ReadonlySet<string> | null = null;
+  private texts: StageTexts = DEFAULT_TEXTS;
 
   private w = 1;
   private h = 1;
@@ -320,6 +334,12 @@ export class Stage {
         this.spans.delete(id);
       }
     }
+    this.invalidate();
+  }
+
+  /** 換語言：世界標題、計數標籤、軌跡標籤的對照表。下一幀就換，不動時間軸 */
+  setTexts(texts: StageTexts): void {
+    this.texts = texts;
     this.invalidate();
   }
 
@@ -998,7 +1018,9 @@ export class Stage {
       if (v.label) {
         used.add(v.id);
         this.label(
-          v.id, `lbl lbl-${v.kind}${labelCls}`, v.label, p.x + labelX, p.y + labelY, labelAlpha * (this.hl && !lit ? 0.6 : 1),
+          v.id, `lbl lbl-${v.kind}${labelCls}`,
+          v.count !== undefined ? `${this.texts.count} ${v.count}` : localizeLabel(v.label, this.texts.labels),
+          p.x + labelX, p.y + labelY, labelAlpha * (this.hl && !lit ? 0.6 : 1),
         );
       }
     }
@@ -1013,7 +1035,7 @@ export class Stage {
       const id = `title:${world}`;
       used.add(id);
       this.label(
-        id, 'lbl lbl-world', world === 'js' ? 'JS 世界' : 'Rust 世界',
+        id, 'lbl lbl-world', world === 'js' ? this.texts.jsWorld : this.texts.rustWorld,
         off.x, off.y + this.bounds.y1 - TITLE_DROP, this.tl ? 1 : 0,
       );
     }

@@ -1,6 +1,8 @@
 import { useMemo } from 'preact/hooks';
 import type { Lang } from '../core/timeline.ts';
 import { tokenize } from './highlight.ts';
+import { STRINGS } from './strings.ts';
+import { useLang } from './useLang.ts';
 
 interface Props {
   lang: Lang;
@@ -18,6 +20,7 @@ interface Props {
 }
 
 export function CodePanel({ lang, title, code, current, hot, pickable, onEnter, onLeave, onPick }: Props) {
+  const S = STRINGS[useLang()];
   const lines = useMemo(
     () =>
       code
@@ -29,7 +32,7 @@ export function CodePanel({ lang, title, code, current, hot, pickable, onEnter, 
   );
 
   return (
-    <section class={`code code-${lang}`} aria-label={`${title} 程式碼`}>
+    <section class={`code code-${lang}`} aria-label={S.codeLabel(title)}>
       <h2 class="code-title">{title}</h2>
       <ol class="code-lines">
         {lines.map(({ tokens, indent }, i) => {
