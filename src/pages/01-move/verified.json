@@ -1,0 +1,22 @@
+{
+  "rustc": "1.100.0",
+  "checkedAt": "2026-11-15T13:50:18.143Z",
+  "files": {
+    "snippet.rs": {
+      "sha256": "af5b88ef02c2bc775a764215b8baf52630381fb8710be950fe47f8c2ae9863c5",
+      "expect": "pass",
+      "success": true,
+      "message": "",
+      "stdout": "hello\n",
+      "stderr": "   Compiling playground v0.0.1 (/playground)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.55s\n     Running `target/debug/playground`\n"
+    },
+    "broken.rs": {
+      "sha256": "02ec65c933a515fdc780d8dc35f9a3712aab7e5b83811c3893018cda97ff1b42",
+      "expect": "E0382",
+      "success": false,
+      "message": "error[E0382]: borrow of moved value: `a`\n --> src/main.rs:5:20\n  |\n2 |     let a = String::from(\"hello\");\n  |         - move occurs because `a` has type `String`, which does not implement the `Copy` trait\n3 |     let b = a;\n  |             - value moved here\n4 |     println!(\"{}\", b);\n5 |     println!(\"{}\", a);\n  |                    ^ value borrowed here after move\n  |\nhelp: consider cloning the value if the performance cost is acceptable\n  |\n3 |     let b = a.clone();\n  |              ++++++++",
+      "stdout": "",
+      "stderr": "   Compiling playground v0.0.1 (/playground)\nerror[E0382]: borrow of moved value: `a`\n --> src/main.rs:5:20\n  |\n2 |     let a = String::from(\"hello\");\n  |         - move occurs because `a` has type `String`, which does not implement the `Copy` trait\n3 |     let b = a;\n  |             - value moved here\n4 |     println!(\"{}\", b);\n5 |     println!(\"{}\", a);\n  |                    ^ value borrowed here after move\n  |\nhelp: consider cloning the value if the performance cost is acceptable\n  |\n3 |     let b = a.clone();\n  |              ++++++++\n\nFor more information about this error, try `rustc --explain E0382`.\nerror: could not compile `playground` (bin \"playground\") due to 1 previous error\n"
+    }
+  }
+}
