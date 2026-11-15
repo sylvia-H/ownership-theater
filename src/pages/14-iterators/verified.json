@@ -1,6 +1,6 @@
 {
   "rustc": "1.100.0",
-  "checkedAt": "2026-11-15T14:11:46.322Z",
+  "checkedAt": "2026-11-15T19:31:06.101Z",
   "files": {
     "snippet.rs": {
       "sha256": "2e41dc5c8f5f8a37e66cfcb1de066d2083ca9608ba5cbf729836d361577085d9",
@@ -8,6 +8,14 @@
       "success": true,
       "message": "",
       "stdout": "還沒有任何值被算出來\n[4, 6]\n",
+      "stderr": "   Compiling playground v0.0.1 (/playground)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.57s\n     Running `target/debug/playground`\n"
+    },
+    "snippet.en.rs": {
+      "sha256": "731ada14fff3af7c924c7ca21f58a97174be00988b7151d8fa5f2e178cd05fe1",
+      "expect": "pass",
+      "success": true,
+      "message": "",
+      "stdout": "no value has been computed yet\n[4, 6]\n",
       "stderr": "   Compiling playground v0.0.1 (/playground)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.57s\n     Running `target/debug/playground`\n"
     }
   }
