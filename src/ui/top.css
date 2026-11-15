@@ -1,0 +1,14 @@
+/* 頁首的「所有權劇場」是回首頁的連結。各頁也看得到，所以不能放在只跟首頁一起載入的 home.css。 */
+
+/* 首頁沒有頁碼與上一頁／下一頁，高度仍與各頁一致，切換時頁首不跳動 */
+.top {
+  min-height: 45px;
+}
+
+a.brand {
+  text-decoration: none;
+}
+
+a.brand:hover {
+  color: var(--text);
+}

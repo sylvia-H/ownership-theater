@@ -1,0 +1,892 @@
+:root {
+  --bg: #07080c;
+  --panel: #0d0f15;
+  --line: #1f232e;
+  --line-strong: #343a4a;
+  --text: #e8e6e1;
+  --muted: #9a988f;
+  --faint: #6a6961;
+  --world-title: #b3b1aa;
+  --js: #ffd140;
+  --rust: #ff7333;
+  --error: #ff4059;
+  --focus: #8fd8ff;
+
+  --font-body: system-ui, 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Code', Consolas, monospace;
+
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+  --gutter: var(--s4);
+  --radius: 3px;
+  /* 左欄隨視窗變寬，程式碼才不用折太多行；1440 寬時場景仍有 950px */
+  --side-width: clamp(400px, 34vw, 540px);
+  --thumb: 16px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+h1,
+h2,
+p,
+ol,
+figure,
+blockquote,
+pre {
+  margin: 0;
+}
+
+ol {
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ── 外框 ─────────────────────────────── */
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+  padding: var(--s2) var(--gutter);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.pager-count {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.pager-link {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  text-decoration: none;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.pager-link:hover {
+  border-color: var(--muted);
+  color: var(--text);
+}
+
+.pager-link.is-disabled {
+  border-color: var(--line);
+  color: var(--faint);
+  opacity: 0.5;
+}
+
+.placeholder {
+  padding: var(--s6) var(--gutter);
+  color: var(--muted);
+}
+
+/* ── 版面：窄螢幕單欄，順序是 說明 → 場景 → 時間軸 → 程式碼 → 引文 ── */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.side,
+.main {
+  display: contents;
+}
+
+.prose {
+  order: 1;
+  padding: var(--s5) var(--gutter) var(--s4);
+}
+
+.stage {
+  order: 2;
+  height: min(120vw, 70dvh);
+}
+
+.timeline {
+  order: 3;
+}
+
+.codes {
+  order: 4;
+  padding: var(--s5) var(--gutter) 0;
+}
+
+.book {
+  order: 5;
+  padding: var(--s5) var(--gutter) var(--s6);
+}
+
+@media (min-width: 960px) {
+  :root {
+    --gutter: var(--s5);
+  }
+
+  .shell {
+    height: 100dvh;
+  }
+
+  .page {
+    display: grid;
+    grid-template-columns: var(--side-width) minmax(0, 1fr);
+  }
+
+  .side {
+    display: block;
+    overflow-y: auto;
+    padding: var(--s5) var(--gutter) var(--s6);
+    border-right: 1px solid var(--line);
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
+  }
+
+  .main {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .prose,
+  .codes,
+  .book {
+    padding: 0;
+  }
+
+  .codes,
+  .book {
+    margin-top: var(--s5);
+  }
+
+  .stage {
+    height: auto;
+  }
+}
+
+/* ── 說明 ─────────────────────────────── */
+
+.kicker {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--rust);
+}
+
+.prose h1 {
+  margin: var(--s2) 0 var(--s3);
+  font-family: var(--font-mono);
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-wrap: balance;
+}
+
+.prose p:not(.kicker) {
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.prose p + p:not(.kicker) {
+  margin-top: var(--s3);
+}
+
+/* ── 程式碼面板 ────────────────────────── */
+
+.codes {
+  display: grid;
+  gap: var(--s4);
+}
+
+.code {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  overflow-x: auto;
+}
+
+.code-title {
+  padding: var(--s1) var(--s3);
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
+
+.code-ts .code-title {
+  color: var(--js);
+}
+
+.code-rust .code-title {
+  color: var(--rust);
+}
+
+.code-lines {
+  padding: var(--s2) 0;
+}
+
+.line {
+  display: flex;
+  width: 100%;
+  padding: 0 var(--s3) 0 0;
+  border: 0;
+  border-left: 2px solid transparent;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.7;
+  text-align: left;
+  white-space: pre;
+}
+
+button.line {
+  cursor: pointer;
+}
+
+button.line:hover,
+.line.is-hot {
+  background: rgb(255 255 255 / 0.06);
+}
+
+.line.is-current {
+  background: rgb(255 255 255 / 0.04);
+}
+
+.code-ts .line.is-current,
+.code-ts .line.is-hot {
+  border-left-color: var(--js);
+}
+
+.code-rust .line.is-current,
+.code-rust .line.is-hot {
+  border-left-color: var(--rust);
+}
+
+button.line:focus-visible {
+  outline-offset: -2px;
+}
+
+.ln {
+  flex: none;
+  width: 2.6em;
+  padding-right: 0.9em;
+  text-align: right;
+  color: var(--faint);
+  user-select: none;
+}
+
+/* 放不下的行自動折行，不出橫向捲軸。續行的懸掛縮排是 --hang（該行開頭的縮排再多 2 格，由 CodePanel 算）：
+   整塊往右推 --hang，第一行再用負的 text-indent 拉回原位。行號是另一個 flex 項目，只會在第一行 */
+.line code {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  padding-left: var(--hang, 2ch);
+  text-indent: calc(-1 * var(--hang, 2ch));
+  font: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.tok-com {
+  color: var(--faint);
+  font-style: italic;
+}
+
+.tok-str {
+  color: #b8d68c;
+}
+
+.tok-num {
+  color: #e0a878;
+}
+
+.tok-kw {
+  color: #c79bf2;
+}
+
+.tok-mac {
+  color: #7fc8e8;
+}
+
+.tok-ty {
+  color: #f0c674;
+}
+
+/* ── Rust Book 引文 ────────────────────── */
+
+.book blockquote {
+  padding-left: var(--s3);
+  border-left: 2px solid var(--line-strong);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.book blockquote p + p {
+  margin-top: var(--s1);
+}
+
+.book figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s1) var(--s4);
+  margin-top: var(--s2);
+  padding-left: calc(var(--s3) + 2px);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.book a {
+  text-underline-offset: 3px;
+  text-decoration-color: var(--line-strong);
+}
+
+.book a:hover {
+  color: var(--text);
+  text-decoration-color: currentColor;
+}
+
+/* ── 場景 ─────────────────────────────── */
+
+.stage {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.stage-view {
+  position: absolute;
+  inset: 0;
+}
+
+.stage-view canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.labels {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.lbl {
+  position: absolute;
+  left: 0;
+  top: 0;
+  translate: -50% -50%;
+  pointer-events: none;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  will-change: transform, opacity;
+}
+
+.lbl-claw,
+.lbl-tag {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.lbl-crystal,
+.lbl-orb,
+.lbl-chip,
+.lbl-bead {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* 光束會從值的標籤後面經過：墊一塊深色的底，字才讀得到 */
+.lbl-crystal,
+.lbl-chip {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--bg, #07080c) 78%, transparent);
+}
+
+/* 收尾區：引用計數、流過管線的值、管線每一段的名字、生命週期的名字 */
+.lbl-note {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--js);
+  padding: 0 5px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--bg, #07080c) 78%, transparent);
+}
+
+.lbl-item {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.lbl-pipe {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.lbl-tether {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* 空位的名字靠在虛線圈的右邊：正上方要留給從空位劈出去的閃電 */
+.lbl-hole {
+  translate: 0 -50%;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.lbl-box {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  padding: 0 4px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--bg, #07080c) 78%, transparent);
+}
+
+.lbl-gate {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.lbl-spark {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgb(255, 110, 125);
+}
+
+.lbl-lens {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* 範圍的框：名字靠在左上角外側 */
+.lbl-frame {
+  translate: 0 -100%;
+  padding: 0 0 4px 2px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+/* JS 的框：名字改靠在左下角外側。變數連到值的線會從框的上緣穿出去，放上面會被線劃過 */
+.lbl-frame.is-below {
+  translate: 0 0;
+  padding: 4px 0 0 2px;
+}
+
+.lbl-sweeper {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--js);
+}
+
+.lbl-world {
+  font-family: var(--font-body);
+  font-size: 13px;
+  letter-spacing: 0.3em;
+  color: var(--world-title);
+}
+
+.stage-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--s5);
+  text-align: center;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+/* 窄螢幕：排在場景正下方、時間軸之前，不疊在 canvas 上 */
+.break {
+  order: 2;
+  display: flex;
+  flex-flow: row-reverse wrap;
+  align-items: baseline;
+  gap: var(--s1) var(--s3);
+  padding: var(--s2) var(--gutter);
+  border-top: 1px solid var(--line);
+}
+
+/* 桌面：疊回場景右上角（.main 的第一列就是場景） */
+@media (min-width: 960px) {
+  .main {
+    position: relative;
+  }
+
+  .break {
+    position: absolute;
+    top: var(--s3);
+    right: var(--s3);
+    display: grid;
+    justify-items: end;
+    gap: var(--s1);
+    max-width: calc(100% - 2 * var(--s3));
+    padding: 0;
+    border-top: 0;
+  }
+}
+
+.break-btn {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s2);
+  padding: var(--s1) var(--s3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: rgb(7 8 12 / 0.7);
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.break-btn.is-armed {
+  border-color: var(--error);
+  color: var(--text);
+}
+
+.break-btn:hover {
+  border-color: var(--muted);
+  color: var(--text);
+}
+
+.break-btn.is-armed:hover {
+  border-color: var(--error);
+  background: rgb(255 64 89 / 0.12);
+}
+
+.break-note {
+  font-size: 11px;
+  color: var(--faint);
+}
+
+.rustc {
+  position: absolute;
+  left: var(--s3);
+  right: var(--s3);
+  bottom: var(--s3);
+  display: flex;
+  flex-direction: column;
+  max-height: min(40%, 300px);
+  border: 1px solid var(--error);
+  border-radius: var(--radius);
+  background: rgb(10 11 16 / 0.98);
+}
+
+/* 標題列與白話說明固定，只有 rustc 原文那塊捲動 */
+.rustc-head,
+.rustc-plain {
+  flex: none;
+}
+
+.rustc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding: var(--s1) var(--s1) var(--s1) var(--s3);
+  border-bottom: 1px solid rgb(255 64 89 / 0.35);
+}
+
+.rustc-head h2 {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--error);
+}
+
+.rustc pre {
+  flex: 1 1 auto;
+  min-height: 2.5em;
+  padding: var(--s2) var(--s3);
+  overflow: auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text);
+  user-select: text;
+}
+
+.rustc-plain {
+  padding: var(--s2) var(--s3);
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+  text-wrap: pretty;
+}
+
+/* ── 時間軸 ────────────────────────────── */
+
+.timeline {
+  padding: var(--s3) var(--gutter) var(--s4);
+  border-top: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.caption {
+  display: grid;
+  gap: var(--s1) var(--s5);
+  min-height: 3.2em;
+  align-content: start;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+@media (min-width: 720px) {
+  .caption {
+    grid-template-columns: 1fr 1fr;
+    min-height: 1.6em;
+  }
+
+  .cap-idle {
+    grid-column: 1 / -1;
+  }
+}
+
+.cap {
+  text-wrap: pretty;
+}
+
+.cap-idle {
+  color: var(--muted);
+}
+
+.cap-tag {
+  display: inline-block;
+  margin-right: var(--s2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.cap-js .cap-tag {
+  color: var(--js);
+}
+
+.cap-rust .cap-tag {
+  color: var(--rust);
+}
+
+.transport {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s4);
+  margin-top: var(--s3);
+}
+
+.transport-buttons {
+  display: flex;
+  gap: var(--s1);
+}
+
+.btn {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 var(--s2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: none;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.btn:hover:not(:disabled) {
+  border-color: var(--muted);
+  color: var(--text);
+}
+
+.btn:disabled {
+  border-color: var(--line);
+  color: var(--faint);
+  opacity: 0.5;
+  cursor: default;
+}
+
+.btn-play {
+  min-width: 52px;
+}
+
+.rustc-close {
+  border-color: transparent;
+  font-size: 16px;
+}
+
+.scrub {
+  flex: 1;
+  min-width: 0;
+}
+
+.slider {
+  display: block;
+  width: 100%;
+  height: 28px;
+  margin: 0;
+  background: none;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+
+.slider::-webkit-slider-runnable-track {
+  height: 2px;
+  background: var(--line-strong);
+}
+
+.slider::-moz-range-track {
+  height: 2px;
+  background: var(--line-strong);
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: var(--thumb);
+  height: var(--thumb);
+  margin-top: calc((2px - var(--thumb)) / 2);
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+  background: var(--text);
+  box-shadow: 0 0 0 1px var(--text);
+}
+
+.slider::-moz-range-thumb {
+  width: calc(var(--thumb) - 4px);
+  height: calc(var(--thumb) - 4px);
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+  background: var(--text);
+  box-shadow: 0 0 0 1px var(--text);
+}
+
+.slider:focus-visible {
+  outline-offset: 0;
+}
+
+/* 刻度對齊拖把的中心：拖把中心的行程兩端各內縮半個拖把寬 */
+.ticks {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 calc(var(--thumb) / 2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.tick {
+  position: relative;
+  width: 0;
+  display: flex;
+  justify-content: center;
+  padding-top: 8px;
+}
+
+.tick::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 5px;
+  background: var(--line-strong);
+}
+
+.tick.is-done {
+  color: var(--muted);
+}
+
+.tick.is-done::before {
+  background: var(--muted);
+}
+
+.tick.is-now {
+  color: var(--text);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .line,
+  .btn,
+  .break-btn,
+  .pager-link {
+    transition:
+      background-color 120ms ease-out,
+      border-color 120ms ease-out,
+      color 120ms ease-out;
+  }
+}
