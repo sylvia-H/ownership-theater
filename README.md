@@ -14,8 +14,8 @@
 | --- | --- |
 | `npm run dev` | 開發。 |
 | `npm run build` | 型別檢查、打包、首屏體積檢查，任一步失敗就中止。 |
-| `npm test` | 軌跡核心的測試，以及「軌跡對 rustc」的檢查。 |
-| `npm run verify:rust` | 把每頁的 Rust 片段送到 Rust Playground，用真的 rustc 編譯，結果寫進該頁的 `verified.json`。需要網路；只重送內容有變的片段，加 `--force` 全部重驗；後面接資料夾名稱（可多個）只處理那幾頁，例如 `npm run verify:rust -- 02-copy-vs-move 05-shared-borrow`。 |
+| `npm test` | 軌跡核心的測試、「軌跡對 rustc」的檢查，以及 LeetCode 對照區的檢查。 |
+| `npm run verify:rust` | 把每頁的 Rust 片段送到 Rust Playground，用真的 rustc 編譯，結果寫進該頁的 `verified.json`。需要網路；只重送內容有變的片段，加 `--force` 全部重驗；後面接資料夾名稱（可多個）只處理那幾頁，例如 `npm run verify:rust -- 02-copy-vs-move 05-shared-borrow`；LeetCode 對照區的題目加 `lc/` 前綴，例如 `npm run verify:rust -- lc/01-two-sum`。 |
 
 ## 架構
 
@@ -63,6 +63,40 @@
 5. 跑 `npm test`。
 6. 寫白話說明與 Rust Book 引文。引文要對過官方原文。
 
+## LeetCode 對照區
+
+17 頁之外的另一區，不演動畫：同一題 LeetCode，TS 與 Rust 各一份解法逐行並排，一對一對應的行變灰，Rust 多出來的東西亮起來並標上類別（借用、所有權的搬移、Option 的處理、共享擁有、型別與轉換）。目前五題：Two Sum、Reverse String、Group Anagrams、Reverse Linked List、Invert Binary Tree。
+
+每題一個資料夾 `src/lc/NN-slug/`：
+
+| 檔案 | 內容 |
+| --- | --- |
+| `solution.rs`、`solution.ts` | 完整可執行的程式：解法加上測試外殼（跑幾組測資並印出結果）。兩邊印出的內容要逐字相同。 |
+| `expect.json` | 固定是 `{ "solution.rs": "pass" }`。 |
+| `verified.json` | `npm run verify:rust -- lc/NN-slug` 產生，不要手改。送去編譯的是整個 `solution.rs`。 |
+| `rows.ts` | 手寫的逐行對齊表，格式與規則見 `src/lc/types.ts`。 |
+| `index.ts` | 把以上組成一題。 |
+
+新增一題還要在 `src/lc/index.ts` 註冊。
+
+**標記**：`solution.rs` 與 `solution.ts` 各用兩行註解把顯示給讀者的解法框起來，標記之外的測試外殼不顯示。`rows.ts` 的行號是標記之間的行號，從 1 起算。
+
+```rust
+struct Solution;
+
+// --- solution ---
+impl Solution {
+    // 顯示給讀者的解法
+}
+// --- end ---
+
+fn main() { /* 跑測資、println! 結果 */ }
+```
+
+`solution.ts` 要能用 `node solution.ts` 直接執行，所以只能用可抹除的型別語法；解法照 LeetCode 上的寫法，不跟著專案較嚴的 tsconfig 檢查（`tsconfig.json` 的 `exclude` 排除了 `src/lc/**/solution.ts`）。
+
+**驗證**：改過 `solution.rs` 就重跑 `npm run verify:rust -- lc/NN-slug`，再跑 `npm test`。測試（`src/lc/lc.test.ts`）檢查三件事：rustc 驗過的是目前這份 `solution.rs`，而且沒有 warning；實際執行 `node solution.ts` 的輸出與 Rust 版逐字相同；`rows.ts` 涵蓋兩邊解法的每一行，各出現一次。
+
 ## 效能原則
 
 - 沒有變化就不畫，閒置時 0 fps。
@@ -94,4 +128,4 @@
 | M8 | Option／match／Result 3 頁 | 完成 |
 | M9 | 生命週期、迭代器、Rc／RefCell 收尾 5 頁 | 完成 |
 | M10 | 上線（GitHub Pages 自動部署；手機版面不做） | 完成 |
-| 可選 | LC 題概念 diff 區 | 未開始 |
+| 可選 | LC 題概念 diff 區（五題：#1 Two Sum、#344 Reverse String、#49 Group Anagrams、#206 Reverse Linked List、#226 Invert Binary Tree） | 完成 |
